@@ -1,0 +1,12 @@
+services:
+  api:
+    environment: {ENVIRONMENT: offline, DEV_INSECURE_COOKIE: "false", SCAN_MODE: clamav}
+  doc-worker:
+    environment: {ENVIRONMENT: offline, DEV_INSECURE_COOKIE: "false", SCAN_MODE: clamav}
+  clamav:
+    environment: {CLAMAV_NO_FRESHCLAMD: "true"}
+    profiles: !override []
+networks:
+  app_net: {internal: true}
+  ai_net: {internal: true}
+  data_net: {internal: true}

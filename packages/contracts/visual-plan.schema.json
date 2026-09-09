@@ -1,0 +1,56 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "mode": {
+      "default": "none",
+      "enum": [
+        "preserve",
+        "generate",
+        "none",
+        "controlnet",
+        "ip_adapter"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "workflow": {
+      "default": "wf-image-v1",
+      "title": "Workflow",
+      "type": "string"
+    },
+    "controlnet": {
+      "anyOf": [
+        {
+          "enum": [
+            "canny",
+            "depth"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Controlnet"
+    },
+    "ip_adapter": {
+      "default": false,
+      "title": "Ip Adapter",
+      "type": "boolean"
+    },
+    "seed": {
+      "default": 42,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "prompt": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Prompt",
+      "type": "string"
+    }
+  },
+  "title": "VisualPlan",
+  "type": "object"
+}

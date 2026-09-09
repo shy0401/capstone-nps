@@ -1,0 +1,129 @@
+name: capstone-nps
+x-runtime: &runtime
+  image: capstone-nps-api:0.1.0
+  build:
+    context: .
+    dockerfile: infra/compose/api.Dockerfile
+  env_file: .env
+  environment: &env
+    DATABASE_URL: postgresql+psycopg://nps:${POSTGRES_PASSWORD:?run bootstrap}@postgres:5432/nps
+    REDIS_URL: redis://redis:6379/0
+    STORAGE_ROOT: /app/storage
+    LLM_ADAPTER_URL: http://llm-adapter:8010
+    COMFY_ADAPTER_URL: http://comfy-adapter:8020
+    FONT_PATH: /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
+  volumes: ["storage:/app/storage"]
+  networks: [app_net, data_net]
+  init: true
+  restart: unless-stopped
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  mem_limit: 1536m
+  depends_on:
+    postgres: {condition: service_healthy}
+    redis: {condition: service_healthy}
+services:
+  edge:
+    image: capstone-nps-edge:0.1.0
+    build:
+      context: .
+      dockerfile: infra/compose/edge.Dockerfile
+    ports: ["127.0.0.1:${EDGE_PORT:-8080}:8080"]
+    networks: [edge_net, app_net]
+    depends_on: [api]
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:8080/api/v1/health/live]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+  api:
+    <<: *runtime
+    command: [sh, -c, "alembic upgrade head && python -m nps.seed && uvicorn nps.main:app --host 0.0.0.0 --port 8000 --no-access-log"]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/ready')"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+  postgres:
+    image: postgres:16.13-alpine
+    environment:
+      POSTGRES_DB: nps
+      POSTGRES_USER: nps
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run bootstrap}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    networks: [data_net]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U nps -d nps"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7.4.8-alpine
+    command: [redis-server, --appendonly, "yes", --maxmemory-policy, noeviction]
+    volumes: ["redisdata:/data"]
+    networks: [data_net]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  llm-adapter:
+    <<: *runtime
+    command: [uvicorn, nps.adapter_api:llm_app, --host, 0.0.0.0, --port, "8010", --no-access-log]
+    networks: [app_net, ai_net]
+    depends_on: {}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8010/health')"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+  comfy-adapter:
+    <<: *runtime
+    command: [uvicorn, nps.adapter_api:comfy_app, --host, 0.0.0.0, --port, "8020", --no-access-log]
+    networks: [app_net, ai_net]
+    depends_on: {}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8020/health')"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+  doc-worker:
+    <<: *runtime
+    command: [python, workers/document/main.py]
+  llm-worker:
+    <<: *runtime
+    command: [python, workers/llm/main.py]
+  ppt-worker:
+    <<: *runtime
+    command: [python, workers/ppt/main.py]
+  image-worker:
+    <<: *runtime
+    command: [python, workers/image/main.py]
+  video-worker:
+    <<: *runtime
+    command: [python, workers/video/main.py]
+  clamav:
+    image: clamav/clamav:1.4.3
+    profiles: [prod, offline, scan]
+    networks: [data_net]
+    volumes: ["clamdb:/var/lib/clamav"]
+    healthcheck:
+      test: [CMD, clamdcheck.sh]
+      interval: 15s
+      timeout: 10s
+      retries: 25
+networks:
+  edge_net: {}
+  app_net: {internal: true}
+  ai_net: {internal: true}
+  data_net: {internal: true}
+  mgmt_net: {internal: true}
+volumes:
+  storage: {}
+  pgdata: {}
+  redisdata: {}
+  clamdb: {}
+

@@ -1,0 +1,10 @@
+services:
+  api:
+    environment:
+      ENVIRONMENT: dev
+      DEV_INSECURE_COOKIE: "true"
+      SCAN_MODE: mock
+  doc-worker:
+    environment:
+      ENVIRONMENT: dev
+      SCAN_MODE: mock

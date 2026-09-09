@@ -1,0 +1,278 @@
+{
+  "$defs": {
+    "ContentBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "default": "text",
+          "enum": [
+            "text",
+            "table",
+            "chart",
+            "image"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "text": {
+          "default": "",
+          "maxLength": 600,
+          "title": "Text",
+          "type": "string"
+        },
+        "cells": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxItems": 12,
+          "title": "Cells",
+          "type": "array"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_refs"
+      ],
+      "title": "ContentBlock",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "document_version_id": {
+          "format": "uuid",
+          "title": "Document Version Id",
+          "type": "string"
+        },
+        "chunk_id": {
+          "format": "uuid",
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "section": {
+          "title": "Section",
+          "type": "string"
+        },
+        "node_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Node Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "document_version_id",
+        "chunk_id",
+        "section"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "PlannedSlide": {
+      "additionalProperties": false,
+      "properties": {
+        "slide_id": {
+          "format": "uuid",
+          "title": "Slide Id",
+          "type": "string"
+        },
+        "version": {
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "layout_type": {
+          "default": "title_content",
+          "enum": [
+            "title_content",
+            "table",
+            "chart",
+            "image"
+          ],
+          "title": "Layout Type",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "content_blocks": {
+          "items": {
+            "$ref": "#/$defs/ContentBlock"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Content Blocks",
+          "type": "array"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "visual_plan": {
+          "$ref": "#/$defs/VisualPlan"
+        }
+      },
+      "required": [
+        "order",
+        "title",
+        "content_blocks",
+        "source_refs"
+      ],
+      "title": "PlannedSlide",
+      "type": "object"
+    },
+    "VisualPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "none",
+          "enum": [
+            "preserve",
+            "generate",
+            "none",
+            "controlnet",
+            "ip_adapter"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "workflow": {
+          "default": "wf-image-v1",
+          "title": "Workflow",
+          "type": "string"
+        },
+        "controlnet": {
+          "anyOf": [
+            {
+              "enum": [
+                "canny",
+                "depth"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Controlnet"
+        },
+        "ip_adapter": {
+          "default": false,
+          "title": "Ip Adapter",
+          "type": "boolean"
+        },
+        "seed": {
+          "default": 42,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "prompt": {
+          "default": "",
+          "maxLength": 1000,
+          "title": "Prompt",
+          "type": "string"
+        }
+      },
+      "title": "VisualPlan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "plan_id": {
+      "format": "uuid",
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "document_versions": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Document Versions",
+      "type": "array"
+    },
+    "title": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "audience": {
+      "const": "internal",
+      "default": "internal",
+      "title": "Audience",
+      "type": "string"
+    },
+    "slides": {
+      "items": {
+        "$ref": "#/$defs/PlannedSlide"
+      },
+      "maxItems": 40,
+      "minItems": 1,
+      "title": "Slides",
+      "type": "array"
+    },
+    "mock": {
+      "title": "Mock",
+      "type": "boolean"
+    },
+    "provenance": {
+      "additionalProperties": true,
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "required": [
+    "document_versions",
+    "title",
+    "slides",
+    "mock"
+  ],
+  "title": "SlidePlanContract",
+  "type": "object"
+}

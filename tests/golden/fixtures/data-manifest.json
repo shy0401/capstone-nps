@@ -1,0 +1,11 @@
+{
+  "classification": "synthetic",
+  "real_personal_data": false,
+  "files": [
+    "injection.docx",
+    "synthetic.docx",
+    "synthetic.hwpx",
+    "synthetic.pdf",
+    "synthetic.xlsx"
+  ]
+}

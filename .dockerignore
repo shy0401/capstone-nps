@@ -1,0 +1,9 @@
+.venv
+.offline-venv
+.git
+**/node_modules
+storage
+release
+test-results
+.env
+infra/secrets

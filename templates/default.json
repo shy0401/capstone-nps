@@ -1,0 +1,7 @@
+{
+  "version": "1.0", "official_flag": false, "name": "default_internal_template",
+  "font": "Noto Sans CJK KR", "title_pt": 32, "body_pt": 22, "min_font_pt": 17,
+  "safe_margin_inches": 0.5, "width_inches": 13.333333, "height_inches": 7.5,
+  "background": "F7F9FC", "foreground": "183047", "accent": "217C82",
+  "image_policy": "contain", "logo": null, "official_spec": "TBD-NPS-OUT-001"
+}

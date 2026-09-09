@@ -1,0 +1,6 @@
+{
+  "workflow_version": "wf-image-1.0", "mode": "mock", "custom_nodes_lock": "custom_nodes.lock.json",
+  "supported_modes": ["generate", "controlnet", "ip_adapter"],
+  "model_manifest": "model-manifest.json", "graph": {},
+  "real_workflow_config": "TBD-NPS-GPU-001"
+}

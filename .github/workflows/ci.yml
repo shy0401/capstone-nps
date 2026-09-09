@@ -1,0 +1,20 @@
+name: prototype-gates
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-cjk libreoffice-impress
+      - run: pip install -r requirements-dev.lock
+      - run: python infra/scripts/bootstrap.py
+      - run: ruff check apps/api tests infra/scripts
+      - run: pytest --cov=nps --junitxml=test-results/pytest.xml
+      - run: npm ci && npm test && npm run build
+        working-directory: apps/web
+      - run: python infra/scripts/manage.py e2e
+      - run: python infra/scripts/manage.py bundle

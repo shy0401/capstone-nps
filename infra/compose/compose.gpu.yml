@@ -1,0 +1,25 @@
+# Reference allocation only. Actual model serving/VRAM/TP remain TBD-NPS-GPU-001.
+# Apply to a host with the NVIDIA Container Toolkit after benchmarking.
+services:
+  image-worker:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: ${IMAGE_GPU_ID:?set approved image device}
+      WORKER_VRAM_MB: ${IMAGE_VRAM_MB:?set measured capacity}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${IMAGE_GPU_ID}"]
+              capabilities: [gpu]
+  video-worker:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: ${VIDEO_GPU_ID:?set approved video device}
+      WORKER_VRAM_MB: ${VIDEO_VRAM_MB:?set measured capacity}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${VIDEO_GPU_ID}"]
+              capabilities: [gpu]

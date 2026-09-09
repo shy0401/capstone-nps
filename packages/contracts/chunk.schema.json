@@ -1,0 +1,154 @@
+{
+  "$defs": {
+    "SourceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "section": {
+          "default": "",
+          "title": "Section",
+          "type": "string"
+        },
+        "paragraph": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Paragraph"
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Table"
+        },
+        "sheet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sheet"
+        }
+      },
+      "title": "SourceLocation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "chunk_id": {
+      "format": "uuid",
+      "title": "Chunk Id",
+      "type": "string"
+    },
+    "document_id": {
+      "format": "uuid",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "version_id": {
+      "format": "uuid",
+      "title": "Version Id",
+      "type": "string"
+    },
+    "section_id": {
+      "title": "Section Id",
+      "type": "string"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    },
+    "token_count": {
+      "title": "Token Count",
+      "type": "integer"
+    },
+    "source_location": {
+      "$ref": "#/$defs/SourceLocation"
+    },
+    "previous_chunk_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Previous Chunk Id"
+    },
+    "next_chunk_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Chunk Id"
+    },
+    "table_refs": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Table Refs",
+      "type": "array"
+    },
+    "image_refs": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Image Refs",
+      "type": "array"
+    },
+    "security_class": {
+      "default": "synthetic",
+      "title": "Security Class",
+      "type": "string"
+    }
+  },
+  "required": [
+    "document_id",
+    "version_id",
+    "section_id",
+    "text",
+    "token_count",
+    "source_location"
+  ],
+  "title": "SemanticChunk",
+  "type": "object"
+}

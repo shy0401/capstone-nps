@@ -1,0 +1,5 @@
+{
+  "version": "mock-extractive-1.0", "engine": "deterministic-extractive-mock",
+  "mock": true, "weights": [], "license": "project source license",
+  "production_model": "TBD-NPS-GPU-001", "packaging_approval": "TBD-NPS-REL-001"
+}

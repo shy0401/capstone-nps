@@ -1,0 +1,13 @@
+services:
+  edge:
+    ports: !override ["${EDGE_BIND:-127.0.0.1}:${EDGE_TLS_PORT:-443}:8443"]
+    volumes:
+      - ./infra/nginx/tls.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infra/secrets/tls.crt:/etc/nginx/tls/tls.crt:ro
+      - ./infra/secrets/tls.key:/etc/nginx/tls/tls.key:ro
+  api:
+    environment: {ENVIRONMENT: prod, DEV_INSECURE_COOKIE: "false", SCAN_MODE: clamav}
+  doc-worker:
+    environment: {ENVIRONMENT: prod, DEV_INSECURE_COOKIE: "false", SCAN_MODE: clamav}
+  clamav:
+    profiles: !override []

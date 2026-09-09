@@ -1,0 +1,772 @@
+[
+  {
+    "id": "FR-IAM-001",
+    "priority": "MUST",
+    "requirement": "시스템은 모든 보호 기능에 대해 인증된 사용자만 접근하도록 하며, 비인증 요청은 로그인 또는 401/403 응답으로 차단해야 한다.",
+    "acceptance": "비인증 API 호출이 401이고 보호 UI 진입이 차단된다.",
+    "target": "/auth, SEC-IAM, TC-IAM"
+  },
+  {
+    "id": "FR-IAM-002",
+    "priority": "MUST",
+    "requirement": "프로토타입은 Local Identity Provider를 제공하고, 운영 배포는 SSO Adapter(OIDC/SAML/LDAP 중 공단 승인 방식)로 교체 가능해야 한다.",
+    "acceptance": "AUTH_PROVIDER 설정 변경만으로 Local/SSO 경계가 분리되고 업무 코드 수정이 없다.",
+    "target": "AuthAdapter, DEP-CONFIG"
+  },
+  {
+    "id": "FR-IAM-003",
+    "priority": "MUST",
+    "requirement": "Local 인증 비밀번호는 Argon2id 등 강한 단방향 해시로 저장하고 평문·복호화 가능한 형태로 저장하지 않아야 한다.",
+    "acceptance": "DB 검사에서 평문 비밀번호가 존재하지 않는다.",
+    "target": "UserCredential, SEC-SECRET"
+  },
+  {
+    "id": "FR-IAM-004",
+    "priority": "MUST",
+    "requirement": "사용자는 하나의 OrganizationUnit에 기본 소속되며 여러 Project에 멤버로 참여할 수 있어야 한다.",
+    "acceptance": "다른 조직 사용자의 프로젝트를 멤버십 없이 조회할 수 없다.",
+    "target": "OrganizationUnit, ProjectMember"
+  },
+  {
+    "id": "FR-IAM-005",
+    "priority": "MUST",
+    "requirement": "역할은 User, Reviewer, OrgAdmin, SystemAdmin의 최소 4종을 지원해야 한다.",
+    "acceptance": "각 역할의 허용·거부 API 자동 테스트가 통과한다.",
+    "target": "RBAC policy"
+  },
+  {
+    "id": "FR-IAM-006",
+    "priority": "MUST",
+    "requirement": "권한 판정은 Role뿐 아니라 OrganizationUnit 및 ProjectMember 범위를 함께 검사해야 한다.",
+    "acceptance": "동일 Role이라도 타 조직/비멤버 프로젝트 접근은 403이다.",
+    "target": "AuthorizationService"
+  },
+  {
+    "id": "FR-IAM-007",
+    "priority": "SHOULD",
+    "requirement": "관리자는 사용자의 활성/비활성 상태와 역할을 변경할 수 있고 변경 이력은 AuditEvent에 기록되어야 한다.",
+    "acceptance": "역할 변경 전후값·수행자·시간이 감사로그에 남는다.",
+    "target": "/admin/users, AuditEvent"
+  },
+  {
+    "id": "FR-PRJ-001",
+    "priority": "MUST",
+    "requirement": "사용자는 프로젝트를 생성하고 프로젝트명, 설명, 조직, 보안등급, 기본 PPT 템플릿을 지정할 수 있어야 한다.",
+    "acceptance": "프로젝트 생성·조회·수정 API와 UI가 동작한다.",
+    "target": "/projects, Project"
+  },
+  {
+    "id": "FR-PRJ-002",
+    "priority": "MUST",
+    "requirement": "프로젝트는 멤버와 역할을 관리하고 프로젝트 밖 사용자에게 문서 및 산출물을 노출하지 않아야 한다.",
+    "acceptance": "비멤버가 document/artifact URL을 직접 호출해도 403이다.",
+    "target": "ProjectMember, SEC-DATA"
+  },
+  {
+    "id": "FR-DOC-001",
+    "priority": "MUST",
+    "requirement": "시스템은 .hwp, .hwpx, .pdf, .docx, .xlsx 입력을 MVP 정식 지원 형식으로 식별해야 한다.",
+    "acceptance": "5개 형식의 샘플 업로드 및 형식 판별 테스트가 통과한다.",
+    "target": "DocumentParserRegistry"
+  },
+  {
+    "id": "FR-DOC-002",
+    "priority": "MUST",
+    "requirement": "업로드 시 확장자, MIME, magic/컨테이너 구조를 교차 검증하여 위장 파일을 거부해야 한다.",
+    "acceptance": "확장자만 바꾼 실행파일·ZIP이 거부된다.",
+    "target": "UploadGuard, SEC-FILE"
+  },
+  {
+    "id": "FR-DOC-003",
+    "priority": "MUST",
+    "requirement": "업로드 파일은 SHA-256을 계산하고 동일 프로젝트 내 중복 업로드를 탐지해야 한다.",
+    "acceptance": "동일 바이트 업로드 시 중복 여부를 반환한다.",
+    "target": "DocumentVersion.sha256"
+  },
+  {
+    "id": "FR-DOC-004",
+    "priority": "MUST",
+    "requirement": "업로드 직후 파일은 quarantine 상태이며 보안검사 성공 전 파서·LLM·ComfyUI로 전달되지 않아야 한다.",
+    "acceptance": "감염/검사실패 파일이 PARSE 단계에 진입하지 않는다.",
+    "target": "QuarantineService"
+  },
+  {
+    "id": "FR-DOC-005",
+    "priority": "MUST",
+    "requirement": "시스템은 파일 크기·페이지/시트·압축 해제 크기 제한을 설정값으로 적용하여 zip bomb 및 자원 고갈을 방어해야 한다.",
+    "acceptance": "제한 초과 샘플이 명확한 오류코드로 거부된다.",
+    "target": "UploadPolicy"
+  },
+  {
+    "id": "FR-DOC-006",
+    "priority": "MUST",
+    "requirement": "문서 원본은 immutable DocumentVersion으로 저장하고 교체 시 새 버전을 생성해야 한다.",
+    "acceptance": "v1을 교체해도 원본과 해시가 보존되고 v2가 추가된다.",
+    "target": "DocumentVersion"
+  },
+  {
+    "id": "FR-DOC-007",
+    "priority": "SHOULD",
+    "requirement": "사용자는 업로드 문서의 제목, 분류, 보안등급, 태그를 수정할 수 있어야 한다.",
+    "acceptance": "메타데이터 변경이 본문 원본 해시를 변경하지 않는다.",
+    "target": "DocumentMetadata"
+  },
+  {
+    "id": "FR-PARSE-001",
+    "priority": "MUST",
+    "requirement": "파서는 입력 문서를 공통 NormalizedDocument 모델로 변환해야 한다.",
+    "acceptance": "각 형식이 동일 계약의 JSON Schema를 통과한다.",
+    "target": "contracts/document.schema.json"
+  },
+  {
+    "id": "FR-PARSE-002",
+    "priority": "MUST",
+    "requirement": "NormalizedDocument는 section, heading, paragraph, table, image, source_location을 보존해야 한다.",
+    "acceptance": "golden 문서의 요소 순서와 source_location이 비교된다.",
+    "target": "ParseResult"
+  },
+  {
+    "id": "FR-PARSE-003",
+    "priority": "MUST",
+    "requirement": "표는 최소 행·열·셀 텍스트·헤더 여부·병합정보·원본 위치를 표현할 수 있어야 한다.",
+    "acceptance": "golden 표의 구조 비교 테스트가 통과한다.",
+    "target": "TableNode"
+  },
+  {
+    "id": "FR-PARSE-004",
+    "priority": "MUST",
+    "requirement": "파서는 암호화·손상·미지원 구조를 임의 추정하지 않고 명시적 상태와 오류코드를 반환해야 한다.",
+    "acceptance": "암호화 PDF/HWP가 성공으로 오인되지 않는다.",
+    "target": "ParseError"
+  },
+  {
+    "id": "FR-PARSE-005",
+    "priority": "MUST",
+    "requirement": "파싱 작업에는 timeout과 메모리/페이지 제한을 적용하고 실패가 전체 API 프로세스를 중단시키지 않아야 한다.",
+    "acceptance": "악성/대형 문서에서 worker만 실패하고 API health는 정상이다.",
+    "target": "DocWorker"
+  },
+  {
+    "id": "FR-CHUNK-001",
+    "priority": "MUST",
+    "requirement": "Semantic Chunk는 섹션 경계를 우선 보존하고 토큰 제한을 보조 조건으로 사용해야 한다.",
+    "acceptance": "heading과 표가 임의로 중간 절단되지 않는 golden test가 통과한다.",
+    "target": "Chunker"
+  },
+  {
+    "id": "FR-CHUNK-002",
+    "priority": "MUST",
+    "requirement": "Chunk는 chunk_id, document_id, section_id, text, token_count, source_location, prev/next id, security_class를 포함해야 한다.",
+    "acceptance": "chunk.schema 검증이 통과한다.",
+    "target": "Chunk"
+  },
+  {
+    "id": "FR-CHUNK-003",
+    "priority": "MUST",
+    "requirement": "표·이미지 참조가 포함된 Chunk는 table_refs/image_refs를 보존해야 한다.",
+    "acceptance": "슬라이드 근거에서 표/이미지 원본을 역추적할 수 있다.",
+    "target": "EvidenceStore"
+  },
+  {
+    "id": "FR-EVD-001",
+    "priority": "MUST",
+    "requirement": "LLM이 생성한 사실성 텍스트 블록은 최소 하나 이상의 source_ref를 가져야 한다.",
+    "acceptance": "source_ref 없는 factual block은 validation에서 실패한다.",
+    "target": "EvidenceValidator"
+  },
+  {
+    "id": "FR-EVD-002",
+    "priority": "MUST",
+    "requirement": "source_ref는 document_version, page/section, chunk_id 또는 table/image node id를 포함해야 한다.",
+    "acceptance": "UI에서 근거 열기를 누르면 원문 위치 정보를 표시한다.",
+    "target": "SourceRef"
+  },
+  {
+    "id": "FR-EVD-003",
+    "priority": "SHOULD",
+    "requirement": "Reviewer는 각 슬라이드 요소에서 근거 문서·Chunk를 확인할 수 있어야 한다.",
+    "acceptance": "Review 화면에서 source panel이 열린다.",
+    "target": "Review UI"
+  },
+  {
+    "id": "FR-LLM-001",
+    "priority": "MUST",
+    "requirement": "업무 코드는 LLM 엔진을 직접 호출하지 않고 LLM Adapter 인터페이스를 통해 호출해야 한다.",
+    "acceptance": "mock/ollama/openai-compatible local adapter 교체 테스트가 통과한다.",
+    "target": "services/llm-adapter"
+  },
+  {
+    "id": "FR-LLM-002",
+    "priority": "MUST",
+    "requirement": "LLM 출력은 자유 텍스트가 아닌 버전된 JSON Schema로 수신·검증해야 한다.",
+    "acceptance": "Schema 불일치 응답은 retry/failed로 처리되고 저장되지 않는다.",
+    "target": "slide-plan.schema.json"
+  },
+  {
+    "id": "FR-LLM-003",
+    "priority": "MUST",
+    "requirement": "LLM은 문서 요약, 핵심 메시지, 슬라이드 개요, 슬라이드별 콘텐츠, 시각 자산 계획을 분리된 단계로 생성해야 한다.",
+    "acceptance": "각 단계별 JobStep과 결과 JSON이 존재한다.",
+    "target": "JobStep, SlidePlan"
+  },
+  {
+    "id": "FR-LLM-004",
+    "priority": "MUST",
+    "requirement": "프롬프트는 PromptPack으로 버전 관리되고 생성 결과에 prompt_pack_version과 prompt_hash가 기록되어야 한다.",
+    "acceptance": "Artifact provenance에서 사용한 prompt 버전을 확인할 수 있다.",
+    "target": "PromptPack"
+  },
+  {
+    "id": "FR-LLM-005",
+    "priority": "MUST",
+    "requirement": "문서 내용은 시스템 지시와 분리된 untrusted data로 처리하며 문서 내 prompt injection 문구가 시스템 정책을 변경할 수 없어야 한다.",
+    "acceptance": "injection golden document에서 금지 동작이 발생하지 않는다.",
+    "target": "SEC-LLM"
+  },
+  {
+    "id": "FR-LLM-006",
+    "priority": "MUST",
+    "requirement": "SlidePlan 생성 후 schema/evidence/length validation을 통과해야 Visual 단계로 진행할 수 있다.",
+    "acceptance": "검증 실패 시 WAITING_REVIEW 또는 FAILED이고 GPU 작업이 시작되지 않는다.",
+    "target": "SlidePlanValidator"
+  },
+  {
+    "id": "FR-LLM-007",
+    "priority": "MUST",
+    "requirement": "사용자는 Visual 생성 전 SlidePlan을 검토·수정·승인할 수 있어야 한다.",
+    "acceptance": "승인되지 않은 plan으로 image/video job을 시작하면 409이다.",
+    "target": "Review/Approval"
+  },
+  {
+    "id": "FR-LLM-008",
+    "priority": "SHOULD",
+    "requirement": "LLM 요청은 token/timeout/retry 상한을 설정하고 무한 재시도를 금지해야 한다.",
+    "acceptance": "오류 주입 테스트에서 지정 횟수 후 종료한다.",
+    "target": "LLMPolicy"
+  },
+  {
+    "id": "FR-LLM-009",
+    "priority": "SHOULD",
+    "requirement": "응답에는 모델 식별자, model revision/hash, context/prompt version 및 수행시간을 남겨야 한다.",
+    "acceptance": "GenerationRun 메타데이터가 채워진다.",
+    "target": "ModelManifest"
+  },
+  {
+    "id": "FR-VIS-001",
+    "priority": "MUST",
+    "requirement": "FastAPI/Frontend는 ComfyUI를 직접 호출하지 않고 Comfy Adapter와 Job Queue를 통해서만 작업을 요청해야 한다.",
+    "acceptance": "Browser/network 테스트에서 8188 계열 포트가 외부 노출되지 않는다.",
+    "target": "ComfyAdapter, SEC-NET"
+  },
+  {
+    "id": "FR-VIS-002",
+    "priority": "MUST",
+    "requirement": "이미지 생성은 workflow JSON, prompt, seed, 모델/노드 버전을 기록해야 한다.",
+    "acceptance": "동일 고정 seed/workflow로 재현 메타데이터가 남는다.",
+    "target": "WorkflowManifest"
+  },
+  {
+    "id": "FR-VIS-003",
+    "priority": "MUST",
+    "requirement": "ControlNet(Canny/Depth) 및 IP-Adapter 사용 여부를 VisualPlan 속성으로 명시할 수 있어야 한다.",
+    "acceptance": "VisualPlan schema가 옵션을 표현하고 worker가 분기한다.",
+    "target": "visual-plan.schema.json"
+  },
+  {
+    "id": "FR-VIS-004",
+    "priority": "MUST",
+    "requirement": "문서 도표/차트 형태를 유지해야 하는 시각화는 생성형 이미지로 임의 재구성하지 않고 구조 보존 경로를 우선해야 한다.",
+    "acceptance": "chart/table preserve 플래그 시 원본 구조/벡터 경로가 선택된다.",
+    "target": "VisualPolicy"
+  },
+  {
+    "id": "FR-VIS-005",
+    "priority": "MUST",
+    "requirement": "ComfyUI 실패는 해당 JobStep만 실패시키며 retry 정책에 따라 재실행할 수 있어야 한다.",
+    "acceptance": "worker 강제 종료 후 재시작·retry가 가능하다.",
+    "target": "ComfyWorker"
+  },
+  {
+    "id": "FR-VIS-006",
+    "priority": "MUST",
+    "requirement": "Image/Video worker는 GPU 예약 정보를 받아 자신에게 할당된 device만 사용해야 한다.",
+    "acceptance": "NVIDIA_VISIBLE_DEVICES 및 worker config가 적용된다.",
+    "target": "GPU Scheduler"
+  },
+  {
+    "id": "FR-VIS-007",
+    "priority": "SHOULD",
+    "requirement": "생성 자산은 프로젝트/슬라이드/버전과 연결되고 Reviewer가 교체 또는 재생성할 수 있어야 한다.",
+    "acceptance": "asset version history가 보존된다.",
+    "target": "VisualAsset"
+  },
+  {
+    "id": "FR-VIS-008",
+    "priority": "SHOULD",
+    "requirement": "개발환경에서 GPU/ComfyUI가 없어도 mock adapter로 end-to-end 프로토타입을 실행할 수 있어야 한다.",
+    "acceptance": "CPU CI에서 golden e2e가 통과한다.",
+    "target": "MockComfyAdapter"
+  },
+  {
+    "id": "FR-PPT-001",
+    "priority": "MUST",
+    "requirement": "시스템은 승인된 SlidePlan으로부터 편집 가능한 .pptx를 생성해야 한다.",
+    "acceptance": "PowerPoint/LibreOffice에서 repair 경고 없이 열리고 텍스트가 편집 가능하다.",
+    "target": "PptRenderer"
+  },
+  {
+    "id": "FR-PPT-002",
+    "priority": "MUST",
+    "requirement": "PPT는 선택된 Master/Template 규칙을 우선 적용하고 템플릿 미제공 시 내부 기본 템플릿을 사용하되 공식 템플릿으로 표시하지 않아야 한다.",
+    "acceptance": "Template ID가 Artifact에 기록되고 기본 템플릿은 clearly internal로 표기된다.",
+    "target": "TemplateService"
+  },
+  {
+    "id": "FR-PPT-003",
+    "priority": "MUST",
+    "requirement": "텍스트는 슬라이드 경계를 벗어나지 않아야 하며 overflow 검사에서 실패한 슬라이드는 자동 축약/재레이아웃 또는 검토대기로 전환해야 한다.",
+    "acceptance": "overflow golden case가 0 overflow 또는 review 상태가 된다.",
+    "target": "PptQualityGate"
+  },
+  {
+    "id": "FR-PPT-004",
+    "priority": "MUST",
+    "requirement": "이미지·도형은 slide bounds와 safe margin을 위반하지 않아야 한다.",
+    "acceptance": "clipping/out-of-bounds 검사 0건이다.",
+    "target": "PptQualityGate"
+  },
+  {
+    "id": "FR-PPT-005",
+    "priority": "MUST",
+    "requirement": "표는 가능한 경우 편집 가능한 PowerPoint table로 생성하고 단순 스크린샷으로 대체하지 않아야 한다.",
+    "acceptance": "table golden slide에서 cell 편집이 가능하다.",
+    "target": "TableRenderer"
+  },
+  {
+    "id": "FR-PPT-006",
+    "priority": "MUST",
+    "requirement": "그래프는 구조화 데이터가 존재할 경우 차트 또는 편집 가능한 벡터/도형을 우선하며, 근거 데이터를 연결해야 한다.",
+    "acceptance": "chart provenance가 source table을 참조한다.",
+    "target": "ChartRenderer"
+  },
+  {
+    "id": "FR-PPT-007",
+    "priority": "MUST",
+    "requirement": "각 슬라이드는 slide_id와 source_refs를 Artifact metadata에 보존해야 한다.",
+    "acceptance": "slide-level trace 화면에서 근거가 조회된다.",
+    "target": "ArtifactSlideMap"
+  },
+  {
+    "id": "FR-PPT-008",
+    "priority": "MUST",
+    "requirement": "사용자는 슬라이드 텍스트·이미지를 인라인 수정하고 선택 슬라이드만 재생성할 수 있어야 한다.",
+    "acceptance": "전체 deck 재생성 없이 1개 slide version이 증가한다.",
+    "target": "PartialRegeneration"
+  },
+  {
+    "id": "FR-PPT-009",
+    "priority": "MUST",
+    "requirement": "PPT 파일은 DRAFT/REVIEWED/APPROVED 상태를 가지며 APPROVED만 공식 사용 가능 상태로 표시해야 한다.",
+    "acceptance": "DRAFT 다운로드에는 비공식 상태가 표시되고 승인 후 상태가 변경된다.",
+    "target": "ApprovalState"
+  },
+  {
+    "id": "FR-PPT-010",
+    "priority": "SHOULD",
+    "requirement": "제목·본문·캡션·표의 최소 글자 크기와 safe margin은 TemplatePolicy로 설정 가능해야 한다.",
+    "acceptance": "템플릿 정책 변경이 code 변경 없이 반영된다.",
+    "target": "TemplatePolicy"
+  },
+  {
+    "id": "FR-PPT-011",
+    "priority": "SHOULD",
+    "requirement": "동일 Template/PromptPack/SlidePlan으로 재생성할 때 구조적 일관성이 유지되어야 한다.",
+    "acceptance": "golden deck 회귀검사에서 레이아웃 규칙 위반이 없다.",
+    "target": "PPT Regression"
+  },
+  {
+    "id": "FR-PPT-012",
+    "priority": "MUST",
+    "requirement": "PPT 품질 Gate 결과를 machine-readable JSON으로 저장해야 한다.",
+    "acceptance": "artifact별 qa_report.json이 생성된다.",
+    "target": "QaReport"
+  },
+  {
+    "id": "FR-VID-001",
+    "priority": "MUST",
+    "requirement": "영상은 승인된 SlidePlan 및 승인/검토된 PPT 콘텐츠와 동일한 메시지 구조에서 Storyboard를 생성해야 한다.",
+    "acceptance": "PPT와 영상 storyboard의 slide/scene mapping이 존재한다.",
+    "target": "Storyboard"
+  },
+  {
+    "id": "FR-VID-002",
+    "priority": "MUST",
+    "requirement": "영상의 scene별 source_slide_id 및 source_refs를 보존해야 한다.",
+    "acceptance": "scene provenance 조회가 가능하다.",
+    "target": "VideoScene"
+  },
+  {
+    "id": "FR-VID-003",
+    "priority": "MUST",
+    "requirement": "영상 자산 생성은 ComfyUI Video workflow 또는 대체 renderer adapter를 통해 Job Queue에서 수행해야 한다.",
+    "acceptance": "video worker가 독립 queue로 실행된다.",
+    "target": "VideoWorker"
+  },
+  {
+    "id": "FR-VID-004",
+    "priority": "MUST",
+    "requirement": "프로토타입 기본 출력은 16:9, 1920x1080, H.264 MP4로 생성하되 기관 최종 규격은 configuration으로 변경 가능해야 한다.",
+    "acceptance": "ffprobe 결과가 기본 규격과 일치하고 설정 변경이 반영된다.",
+    "target": "VideoProfile"
+  },
+  {
+    "id": "FR-VID-005",
+    "priority": "MUST",
+    "requirement": "영상 생성 실패는 PPT artifact를 무효화하지 않으며 VIDEO 단계에서 재시작할 수 있어야 한다.",
+    "acceptance": "video step retry가 parse/LLM/PPT를 재실행하지 않는다.",
+    "target": "Job Resume"
+  },
+  {
+    "id": "FR-VID-006",
+    "priority": "MUST",
+    "requirement": "영상은 DRAFT/REVIEWED/APPROVED 상태를 가지며 Reviewer 승인 전 공식 결과로 표시되지 않아야 한다.",
+    "acceptance": "미승인 영상의 official flag=false이다.",
+    "target": "ApprovalState"
+  },
+  {
+    "id": "FR-VID-007",
+    "priority": "SHOULD",
+    "requirement": "자막·로고·인트로/아웃트로·장면 길이는 VideoProfile로 관리해야 한다.",
+    "acceptance": "profile JSON 수정만으로 렌더링 설정이 바뀐다.",
+    "target": "VideoProfile"
+  },
+  {
+    "id": "FR-VID-008",
+    "priority": "SHOULD",
+    "requirement": "동일 Storyboard에서 특정 scene만 재생성 가능해야 한다.",
+    "acceptance": "scene version만 증가하고 전체 영상 assemble만 다시 수행된다.",
+    "target": "PartialRegeneration"
+  },
+  {
+    "id": "FR-JOB-001",
+    "priority": "MUST",
+    "requirement": "모든 장기 작업은 비동기 GenerationJob으로 생성되어 HTTP 요청 수명과 분리되어야 한다.",
+    "acceptance": "업로드 후 202 + job_id 반환, API timeout 없이 작업이 지속된다.",
+    "target": "/jobs, Celery/Redis"
+  },
+  {
+    "id": "FR-JOB-002",
+    "priority": "MUST",
+    "requirement": "Job 상태는 QUEUED, RUNNING, WAITING_REVIEW, SUCCEEDED, FAILED, CANCELLED, RETRYING을 지원해야 한다.",
+    "acceptance": "상태 전이 테스트가 허용 transition만 통과한다.",
+    "target": "JobStateMachine"
+  },
+  {
+    "id": "FR-JOB-003",
+    "priority": "MUST",
+    "requirement": "JobStep은 SECURITY_SCAN, PARSE, CHUNK, LLM, PLAN_VALIDATE, IMAGE, PPT, PPT_QA, VIDEO, FINAL_QA를 최소 지원해야 한다.",
+    "acceptance": "단일 job의 step 이력이 순서대로 기록된다.",
+    "target": "JobStep"
+  },
+  {
+    "id": "FR-JOB-004",
+    "priority": "MUST",
+    "requirement": "사용자는 job 진행률, 현재 단계, 대기 순서 또는 실행 상태, 실패 원인을 조회할 수 있어야 한다.",
+    "acceptance": "REST 조회와 WebSocket event가 일치한다.",
+    "target": "/jobs/{id}, /ws/v1/jobs/{id}"
+  },
+  {
+    "id": "FR-JOB-005",
+    "priority": "MUST",
+    "requirement": "취소 가능한 단계에서 사용자가 job을 취소할 수 있어야 하며 취소가 GPU worker에 전달되어야 한다.",
+    "acceptance": "long mock task cancel 후 CANCELLED이고 후속 step이 시작되지 않는다.",
+    "target": "CancelToken"
+  },
+  {
+    "id": "FR-JOB-006",
+    "priority": "MUST",
+    "requirement": "재시도는 step 단위로 수행하며 이미 승인된 이전 단계 결과를 재사용해야 한다.",
+    "acceptance": "VIDEO 실패 후 resume_from=VIDEO 시 parse/LLM count가 증가하지 않는다.",
+    "target": "RetryPolicy"
+  },
+  {
+    "id": "FR-JOB-007",
+    "priority": "MUST",
+    "requirement": "Queue Manager는 job type, 우선순위, worker heartbeat, GPU capability를 기준으로 worker를 선택해야 한다.",
+    "acceptance": "worker down 상태에서 해당 worker에 신규 할당이 없다.",
+    "target": "Scheduler"
+  },
+  {
+    "id": "FR-JOB-008",
+    "priority": "SHOULD",
+    "requirement": "OrgAdmin/SystemAdmin은 큐 대기량과 worker heartbeat를 조회할 수 있어야 한다.",
+    "acceptance": "admin dashboard/API에서 queue metrics가 보인다.",
+    "target": "/admin/queues"
+  },
+  {
+    "id": "FR-REV-001",
+    "priority": "MUST",
+    "requirement": "Reviewer는 SlidePlan, PPTX, MP4 각각에 대해 approve/reject/request-change를 수행할 수 있어야 한다.",
+    "acceptance": "승인 이벤트와 코멘트가 AuditEvent/Review에 저장된다.",
+    "target": "/reviews"
+  },
+  {
+    "id": "FR-REV-002",
+    "priority": "MUST",
+    "requirement": "승인은 특정 ArtifactVersion에 결합되어야 하며 수정 시 기존 승인을 자동 승계하지 않아야 한다.",
+    "acceptance": "승인 v2 후 수정된 v3는 다시 DRAFT이다.",
+    "target": "ArtifactVersion"
+  },
+  {
+    "id": "FR-REV-003",
+    "priority": "MUST",
+    "requirement": "공식 사용 가능 표시는 최신 ArtifactVersion이 APPROVED이고 모든 필수 QA Gate가 PASS일 때만 true여야 한다.",
+    "acceptance": "QA fail artifact를 승인 API가 차단한다.",
+    "target": "OfficialEligibility"
+  },
+  {
+    "id": "FR-ART-001",
+    "priority": "MUST",
+    "requirement": "모든 생성 산출물은 Artifact와 ArtifactVersion으로 관리하고 파일 해시, 크기, 생성시간, 생성자/Job, provenance를 저장해야 한다.",
+    "acceptance": "DB와 파일 해시가 일치한다.",
+    "target": "ArtifactVersion"
+  },
+  {
+    "id": "FR-ART-002",
+    "priority": "MUST",
+    "requirement": "사용자는 권한 범위 내에서 과거 버전을 조회·다운로드할 수 있어야 한다.",
+    "acceptance": "v1/v2 파일을 각각 재다운로드한다.",
+    "target": "/artifacts"
+  },
+  {
+    "id": "FR-ART-003",
+    "priority": "MUST",
+    "requirement": "원본 문서·중간 JSON·PPTX·MP4·QA report는 별도 storage namespace를 사용해야 한다.",
+    "acceptance": "경로 정책 테스트가 통과한다.",
+    "target": "StorageLayout"
+  },
+  {
+    "id": "FR-ART-004",
+    "priority": "MUST",
+    "requirement": "Artifact 다운로드는 API의 권한 확인 후 스트리밍/서명된 내부 경로 방식으로 제공하고 storage 경로를 직접 공개하지 않아야 한다.",
+    "acceptance": "직접 storage path 접근이 불가하다.",
+    "target": "DownloadService"
+  },
+  {
+    "id": "FR-ART-005",
+    "priority": "SHOULD",
+    "requirement": "보존/삭제 정책은 organization/project/security_class별 configuration을 지원해야 한다.",
+    "acceptance": "retention job이 정책을 적용하고 AuditEvent를 남긴다.",
+    "target": "RetentionPolicy"
+  },
+  {
+    "id": "SEC-IAM-001",
+    "priority": "MUST",
+    "requirement": "모든 API는 명시적으로 public 또는 authenticated로 분류하고 default deny를 적용한다.",
+    "acceptance": "OpenAPI security review에서 미분류 protected endpoint가 0건이다.",
+    "target": "API Gateway"
+  },
+  {
+    "id": "SEC-IAM-002",
+    "priority": "MUST",
+    "requirement": "Local refresh token은 HttpOnly, Secure(HTTPS), SameSite=Strict 쿠키로 전달하고 server-side revoke가 가능해야 한다.",
+    "acceptance": "로그아웃 후 refresh가 거부된다.",
+    "target": "AuthService"
+  },
+  {
+    "id": "SEC-IAM-003",
+    "priority": "MUST",
+    "requirement": "IDOR 방지를 위해 object id만으로 권한을 신뢰하지 않고 resource scope를 매 요청 검증한다.",
+    "acceptance": "타 프로젝트 UUID 대입 공격이 403이다.",
+    "target": "AuthorizationService"
+  },
+  {
+    "id": "SEC-NET-001",
+    "priority": "MUST",
+    "requirement": "외부 publish는 edge/reverse proxy만 허용하고 API/DB/Redis/LLM/ComfyUI는 Docker 내부 network에서만 노출한다.",
+    "acceptance": "docker inspect에서 외부 published port가 edge 외 0건이다.",
+    "target": "compose.prod.yml"
+  },
+  {
+    "id": "SEC-NET-002",
+    "priority": "MUST",
+    "requirement": "prod/offline profile은 AI/DATA network에서 인터넷 egress를 허용하지 않는 배치 정책을 지원해야 한다.",
+    "acceptance": "offline test에서 외부 HTTP/DNS 의존성이 0건이다.",
+    "target": "offline gate"
+  },
+  {
+    "id": "SEC-NET-003",
+    "priority": "MUST",
+    "requirement": "CORS는 명시된 내부 origin allowlist만 허용해야 한다.",
+    "acceptance": "임의 Origin preflight가 거부된다.",
+    "target": "Nginx/FastAPI"
+  },
+  {
+    "id": "SEC-DATA-001",
+    "priority": "MUST",
+    "requirement": "학교 개발환경에는 실제 가입자·내부업무 데이터를 반입하지 않는다.",
+    "acceptance": "개발 data manifest가 공개/합성 샘플만 포함한다.",
+    "target": "Data Boundary"
+  },
+  {
+    "id": "SEC-DATA-002",
+    "priority": "MUST",
+    "requirement": "원본·중간물·산출물 파일명으로 사용자 입력 경로를 직접 사용하지 않고 서버가 생성한 ID 기반 경로를 사용한다.",
+    "acceptance": "path traversal filename test가 안전하다.",
+    "target": "StorageService"
+  },
+  {
+    "id": "SEC-DATA-003",
+    "priority": "MUST",
+    "requirement": "민감 본문, 개인정보, 토큰, 비밀번호, Secret을 application log에 기록하지 않는다.",
+    "acceptance": "log scanner test에서 금지 패턴이 0건이다.",
+    "target": "LoggingPolicy"
+  },
+  {
+    "id": "SEC-FILE-001",
+    "priority": "MUST",
+    "requirement": "업로드 파일은 quarantine에서 악성코드 스캔을 수행하고 scan 실패/timeout은 fail-closed로 처리한다.",
+    "acceptance": "EICAR 테스트가 차단되고 scan unavailable 시 parse가 시작되지 않는다.",
+    "target": "ClamAV Adapter"
+  },
+  {
+    "id": "SEC-FILE-002",
+    "priority": "MUST",
+    "requirement": "ZIP 기반 형식(docx/xlsx/hwpx)은 압축 해제 비율·파일 수·총 크기 제한을 적용한다.",
+    "acceptance": "zip bomb 샘플이 제한으로 중단된다.",
+    "target": "ArchiveGuard"
+  },
+  {
+    "id": "SEC-FILE-003",
+    "priority": "MUST",
+    "requirement": "파서는 외부 URL/embedded object를 자동 실행·다운로드하지 않는다.",
+    "acceptance": "외부 링크 포함 문서에서 네트워크 호출 0건이다.",
+    "target": "Safe Parser"
+  },
+  {
+    "id": "SEC-LLM-001",
+    "priority": "MUST",
+    "requirement": "System prompt와 document content를 구조적으로 분리하고 문서 내 instruction을 정책 지시로 승격하지 않는다.",
+    "acceptance": "prompt injection golden test 통과.",
+    "target": "LLM Adapter"
+  },
+  {
+    "id": "SEC-LLM-002",
+    "priority": "MUST",
+    "requirement": "LLM 출력은 schema validation, allowlisted field 검증, 길이 제한을 통과해야 persistence/render에 사용한다.",
+    "acceptance": "악성 JSON/HTML/script 문자열이 UI에서 실행되지 않는다.",
+    "target": "OutputValidator"
+  },
+  {
+    "id": "SEC-SECRET-001",
+    "priority": "MUST",
+    "requirement": ".env, API key, password, private certificate는 Git에 커밋하지 않고 secret file/environment injection으로 주입한다.",
+    "acceptance": "secret scan CI 통과.",
+    "target": "CI"
+  },
+  {
+    "id": "SEC-AUDIT-001",
+    "priority": "MUST",
+    "requirement": "로그인, 업로드, 생성, 다운로드, 수정, 승인, 삭제, 권한변경을 AuditEvent로 기록한다.",
+    "acceptance": "각 행위에 대한 감사 이벤트 integration test 통과.",
+    "target": "AuditService"
+  },
+  {
+    "id": "SEC-AUDIT-002",
+    "priority": "MUST",
+    "requirement": "AuditEvent는 actor, org/project, action, target, timestamp, result, correlation_id를 포함한다.",
+    "acceptance": "필수필드 null이 0건이다.",
+    "target": "AuditEvent"
+  },
+  {
+    "id": "SEC-SUPPLY-001",
+    "priority": "MUST",
+    "requirement": "Release bundle은 Docker image digest, 모델/Workflow/Prompt hash, SBOM, checksums를 포함한다.",
+    "acceptance": "bundle validator PASS.",
+    "target": "release-manifest.yaml"
+  },
+  {
+    "id": "SEC-SUPPLY-002",
+    "priority": "MUST",
+    "requirement": "latest tag와 무버전 custom node 설치를 금지하고 dependency lock을 유지한다.",
+    "acceptance": "CI 정책 검사에서 unpinned dependency가 실패한다.",
+    "target": "locks"
+  },
+  {
+    "id": "SEC-OFFLINE-001",
+    "priority": "MUST",
+    "requirement": "clean host에서 release bundle만으로 설치 가능해야 하고 runtime 외부 다운로드가 없어야 한다.",
+    "acceptance": "인터넷 차단 설치 및 golden e2e PASS.",
+    "target": "Offline Gate"
+  },
+  {
+    "id": "SEC-OFFLINE-002",
+    "priority": "MUST",
+    "requirement": "rollback은 이전 release bundle을 기준으로 단일 runbook 절차로 수행 가능해야 한다.",
+    "acceptance": "RC에서 이전 version으로 rollback smoke test PASS.",
+    "target": "INSTALL_ROLLBACK.md"
+  },
+  {
+    "id": "NFR-PERF-001",
+    "priority": "MUST",
+    "requirement": "사용자-facing 동기 API(목록/상태/메타데이터)는 프로토타입 기준 정상 부하에서 p95 2초 이내를 목표로 한다. AI/파싱 장기 작업은 제외한다.",
+    "acceptance": "k6 또는 pytest benchmark 결과를 기록하고 초과 시 defect로 남긴다.",
+    "target": "API"
+  },
+  {
+    "id": "NFR-PERF-002",
+    "priority": "TBD",
+    "requirement": "공단 최종 동시 사용자 수, 문서 크기, PPT/영상 SLA는 산업체 성능 기준 확인 후 확정한다.",
+    "acceptance": "TBD-NPS-PERF-001 해소 후 수치화.",
+    "target": "TBD Register"
+  },
+  {
+    "id": "NFR-REL-001",
+    "priority": "MUST",
+    "requirement": "worker 1개 장애가 API/다른 queue를 중단시키지 않아야 한다.",
+    "acceptance": "worker kill chaos test 통과.",
+    "target": "Docker/Queue"
+  },
+  {
+    "id": "NFR-REL-002",
+    "priority": "MUST",
+    "requirement": "모든 장기 작업은 idempotency 또는 중복 방지키를 사용해 사용자 재요청으로 동일 산출물이 무제한 중복 생성되지 않게 한다.",
+    "acceptance": "동일 idempotency key 재요청 결과가 동일 job/result를 반환한다.",
+    "target": "JobService"
+  },
+  {
+    "id": "NFR-MNT-001",
+    "priority": "MUST",
+    "requirement": "API contract, DB migration, Prompt, Workflow, Template을 코드와 독립 버전 축으로 관리한다.",
+    "acceptance": "Release Manifest에 5축 이상 기록.",
+    "target": "Release"
+  },
+  {
+    "id": "NFR-PORT-001",
+    "priority": "MUST",
+    "requirement": "환경별 차이는 config/secret/volume mapping으로 처리하고 업무 코드의 IP/VLAN hardcoding을 금지한다.",
+    "acceptance": "grep/config review에서 NPS 내부 IP hardcoding 0건.",
+    "target": "Config"
+  },
+  {
+    "id": "NFR-OBS-001",
+    "priority": "MUST",
+    "requirement": "health/readiness endpoint와 job/worker 상태를 제공한다.",
+    "acceptance": "docker healthcheck가 DB/Redis/API/adapters를 검증한다.",
+    "target": "/health"
+  },
+  {
+    "id": "NFR-ACC-001",
+    "priority": "SHOULD",
+    "requirement": "웹 UI는 키보드 탐색, 명확한 상태텍스트, 색상 외 상태표현 등 기본 접근성을 제공한다.",
+    "acceptance": "주요 workflow의 keyboard test PASS.",
+    "target": "Web UI"
+  },
+  {
+    "id": "NFR-KO-001",
+    "priority": "MUST",
+    "requirement": "한국어 파일명·본문·표·PPT 텍스트를 UTF-8/Unicode로 손실 없이 처리하고 PDF/HTML 문서화에서 한글 글리프 깨짐이 없어야 한다.",
+    "acceptance": "golden 한글 문서 및 출력 육안/자동 검사 PASS.",
+    "target": "전체"
+  }
+]

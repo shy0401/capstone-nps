@@ -1,0 +1,8 @@
+# Isolated verification project. No published ports, including edge.
+services:
+  edge:
+    ports: !override []
+  api:
+    environment:
+      E2E_BASE_URL: http://api:8000
+      RUN_CLAMAV_TEST: "1"
