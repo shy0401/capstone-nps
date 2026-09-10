@@ -14,7 +14,7 @@ from nps.work_api import router as work_router, ws_router
 from nps.artifacts import router as artifact_router
 from nps.auth import audit_correlation
 
-app = FastAPI(title="연금술사 Prototype API", version="0.1.0", openapi_version="3.1.0")
+app = FastAPI(title="연금술사 Prototype API", version="0.1.1", openapi_version="3.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings().allowed_origins.split(","),
@@ -79,7 +79,7 @@ async def validation_error(request, exc):
 
 @app.get("/api/v1/health/live")
 def live():
-    return {"status": "alive", "version": "0.1.0"}
+    return {"status": "alive", "version": "0.1.1"}
 
 
 @app.get("/api/v1/health/ready")

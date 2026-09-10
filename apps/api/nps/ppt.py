@@ -1,4 +1,5 @@
 import json
+import os
 import zipfile
 import hashlib
 from pathlib import Path
@@ -13,7 +14,7 @@ from sqlalchemy import func, select
 from nps.auth import audit
 from nps.errors import DomainError
 from nps.models import Artifact, ArtifactVersion, Project, Template, User, VisualAsset
-from nps.rendering import text_fits
+from nps.rendering import text_fits, text_layout
 from nps.storage import sha256_file, storage
 
 
@@ -120,16 +121,17 @@ def render_ppt(plan, output, policy, template_path=None, images=None):
                     str(image_path), Inches(0.65), Inches(y), width=Inches(width), height=Inches(height)
                 )
             else:
-                add_text(
-                    slide,
+                size, width, parts = text_layout(
                     block.get("text", ""),
-                    0.65,
-                    y,
                     7.3 if decorative else 12,
                     available - 0.1,
                     policy["body_pt"],
-                    policy,
+                    policy["min_font_pt"],
                 )
+                for index, part in enumerate(parts):
+                    add_text(
+                        slide, part, 0.65 + index * (width + 0.3), y, width, available - 0.1, size, policy
+                    )
             y += available
         if decorative:
             from PIL import Image
@@ -271,7 +273,7 @@ def persist_artifact(db, job, plan, kind, key, qa, extra):
     qa_key = storage.write_json("qa", qa)
     provenance = {
         **plan.data["provenance"],
-        "app_version": "0.1.0",
+        "app_version": "0.1.1",
         "plan_id": plan.id,
         "plan_version": plan.version,
         "template_id": template.id,
@@ -280,7 +282,7 @@ def persist_artifact(db, job, plan, kind, key, qa, extra):
         "document_version_ids": plan.data["document_versions"],
         "generated_by_job_id": job.id,
         "generated_at": utcnow().isoformat(),
-        "git_sha": "UNCOMMITTED_WORKSPACE",
+        "git_sha": os.environ.get("APP_GIT_SHA", "UNKNOWN"),
         "workflow_version": "wf-image-1.0",
         "workflow_hash": hashlib.sha256(Path("workflows/comfy/wf-image-v1.json").read_bytes()).hexdigest(),
         "visual_assets": [

@@ -48,3 +48,21 @@ def test_overflow_is_not_success(tmp_path):
     policy = json.loads(Path("templates/default.json").read_text(encoding="utf-8"))
     render_ppt(plan, path, policy)
     assert qa_ppt(path, plan, policy)["status"] == "FAIL"
+
+
+def test_many_short_paragraphs_flow_without_content_loss(tmp_path):
+    from pptx import Presentation
+    from nps.rendering import preview_slide
+
+    plan = sample_plan()
+    text = "\n".join(f"합성 항목 {i}: {i}건" for i in range(35))
+    plan["slides"][0]["content_blocks"] = [
+        {"type": "text", "text": text, "source_refs": plan["slides"][0]["source_refs"]}
+    ]
+    path = tmp_path / "multicolumn.pptx"
+    policy = json.loads(Path("templates/default.json").read_text(encoding="utf-8"))
+    render_ppt(plan, path, policy)
+    assert qa_ppt(path, plan, policy)["status"] == "PASS"
+    boxes = [s.text for s in Presentation(path).slides[0].shapes if s.has_text_frame]
+    assert "\n".join(boxes[1:-1]) == text
+    preview_slide(plan["slides"][0], tmp_path / "preview.png", policy)

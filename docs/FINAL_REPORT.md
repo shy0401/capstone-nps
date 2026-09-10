@@ -1,99 +1,84 @@
-# 실행 결과 보고
+# 프로토타입 v0.1.1 검증 보고 · 2026-09-10
 
-**전체 Definition of Done 미충족.** 호스트에서 실제 코드를 실행하고 프로토타입·샘플·테스트를 만들었으나, Windows 가상화/Virtual Machine Platform 비활성으로 Docker·최종 Offline·Release Gate를 완료하지 못했다.
+**Docker CPU/mock 프로토타입은 실행 가능하다. SRS 전체 및 기관 운영 Release Gate는 미완료다.**
+SRS MUST 95개: PASS 72 / PARTIAL 22 / FAIL 0 / TBD 1. PASS는 개별 프로토타입 요구의 범위이며 기관 운영 적합성 승인을 의미하지 않는다.
+기능과 다음 개발 항목은 [FEATURES_ROADMAP.md](FEATURES_ROADMAP.md), 요구별 근거는 [traceability-matrix.md](traceability-matrix.md)에 정리했다.
 
-## 구현
+## 이번 보완
 
-React/TypeScript/Vite 한국어 UI, FastAPI REST/WS, SQLAlchemy/Alembic, PostgreSQL/Redis Compose, Nginx, 5개 독립 Worker를 작성했다.
-Argon2id/local auth/refresh revoke, 4개 Role, org/project scope, IDOR, 감사로그를 구현했다.
-Streaming quarantine, MIME/magic/container/ZIP guard, mock/ClamAV fail-closed scan, immutable document version, safe parser,
-semantic chunk/source evidence, mock/local LLM adapter, schema-valid SlidePlan 승인 Gate를 연결했다.
-Native editable PPTX/table/chart, PPT QA, CPU MP4/ffprobe/전체 frame QA, version/review/approval/부분 재생성,
-queue/lease/heartbeat/progress/cancel/retry/resume 및 REST/WS 동일 snapshot을 제공한다.
-Dependency hash locks, OpenAPI/JSON schemas, synthetic fixtures, offline wheels, SPDX/checksum/manifest/runbook을 작성했다.
-
-## 파일 트리
-
-전체 작성 소스와 생성된 검증 산출물 경로: [file-tree.txt](file-tree.txt).
-설치된 .venv/.offline-venv/node_modules cache는 소스 목록에서 제외한다. Bundle 전체 payload는 checksums.sha256에 기록한다.
-
-```text
-capstone-nps/
-  apps/api/nps/          API, domain, adapters, parsers, rendering, queue
-  apps/web/             React, Vitest, Playwright, static build
-  services/             llm-adapter, comfy-adapter
-  workers/              document, llm, ppt, image, video
-  packages/contracts/   JSON schemas
-  prompts/              PromptPack
-  workflows/comfy/      workflow/model/node locks
-  templates/            internal PPT policy, video profile
-  infra/                Dockerfiles, Nginx, GPU/offline overlays, scripts
-  migrations/           Alembic
-  tests/                unit/integration/security/golden/e2e
-  openapi/openapi.yaml
-  docs/                 110 requirements (95 MUST), traceability, runbooks
-  test-results/         JUnit/coverage/QA/PowerPoint/browser evidence
-  release/              wheelhouse, release-bundle, latest-bundle.txt
-  compose.yml, compose.dev.yml, compose.prod.yml, compose.offline.yml
-  requirements.lock, requirements-dev.lock, pyproject.toml
-  Makefile, README.md, .env.example, .github/workflows/ci.yml
-```
+- HWP 5.x native parser: 본문/셀 문자, 압축·비압축, 구조/메모리 제한, DRM/암호/배포용 파일 명시적 거절. `HWP_ADAPTER_DISABLED` 기본 장애 해소.
+- 프로젝트 소유자가 UI에서 같은 조직의 검토자를 추가할 수 있도록 API·권한 검증 연결.
+- QA 실패 작업을 성공 대신 검토 필요로 표시. 승인 Gate와 원문 근거 유지.
+- 줄이 많은 문서의 다단 배치 및 내용 초과 검출, Git SHA 산출물 provenance 구성.
+- Windows UTF-8 Docker 출력 처리, missing/unhealthy 서비스와 비-edge publish 실패 판정.
+- Vite/Vitest 보안 업데이트 및 lock 재생성. npm audit 검출 취약점 0.
+- Docker build/source bundle에서 비밀 파일·IDE 설정 제외, 컨테이너 OS SBOM·이미지 포함 개발 bundle 기능.
+- 기본 CI와 추가 브라우저 검증은 미디어 생성 없이 수행. 전체 미디어 Golden은 별도 명시적 실행.
 
 ## 실행
 
+저장소 루트에서 Docker Desktop Linux 엔진을 켜고 실행한다.
+
 ```powershell
-cd 'C:\Users\ggg\Documents\4학년\캡스톤\2차 모임 준비\capstone-nps'
-.\.venv\Scripts\python.exe infra/scripts/bootstrap.py
+python infra/scripts/bootstrap.py
 docker compose -f compose.yml -f compose.dev.yml up -d --build --wait
-.\.venv\Scripts\python.exe infra/scripts/manage.py test
-.\.venv\Scripts\python.exe infra/scripts/manage.py e2e
-.\.venv\Scripts\python.exe infra/scripts/manage.py offline-test
-.\.venv\Scripts\python.exe infra/scripts/manage.py bundle
 ```
 
-호스트 진단 UI: http://127.0.0.1:8080. SQLite + Redis TCP emulator를 사용하며 배포용 Compose와 구분한다.
-재기동 절차는 README에 있다.
+웹 주소: http://127.0.0.1:8080
+기존 가상환경에서는 `.\.venv\Scripts\python.exe infra/scripts/manage.py up`도 가능하다.
+계정은 README 표 참조. 비밀번호는 로컬 `.env`의 `SEED_PASSWORD`이며 Git/배포 bundle에 포함하지 않는다.
 
-## 실제 결과
+## 실행 검증
 
-| 항목 | 결과 |
-|---|---|
-| Python 전체 | **58 통과, 0 실패, 1 건너뜀** (실제 ClamAV) |
-| Python coverage | 77.91% (표시값 78%), subprocess/별도 서버 coverage 미통합 |
-| Vitest | **3 통과, 0 실패** |
-| 실제 Edge/Playwright | **1 통과, 0 실패**: 로그인/업로드/근거/승인 Gate/PPTX 다운로드 |
-| strict TypeScript/Vite/Ruff | PASS |
-| Golden | **5 통과**, Python 58개에 포함 |
-| Alembic upgrade/downgrade/upgrade | SQLite 진단 PASS, PostgreSQL/운영 rollback 미검증 |
-| metadata API p95 | 2초 미만, 실측은 test-results/performance.json (단일 client 진단) |
-| Compose config | dev/prod/offline 정적 검증 PASS |
-| Docker 기동 | **BLOCKED**: Virtual Machine Platform not enabled / No virtualization available |
-| 외부 publish | 정적 edge-only PASS, runtime 확인 불가 |
-| Security Gate | 호스트 RBAC/IDOR/업로드/secret/schema/audit PASS. real ClamAV/실망 미검증으로 전체 PASS 아님 |
-| Offline Gate | 새 venv/no-index/hash wheel 설치 + Python network deny + PPT/MP4 PASS. 전체 clean-host/rollback BLOCKED |
+| 검사 | 결과 | 증거/범위 |
+|---|---|---|
+| Docker build/up --wait | PASS | API/edge 0.1.1, dev 11개 서비스 정상 |
+| 외부 publish | PASS | edge 127.0.0.1:8080만 공개; DB/Redis published=0 |
+| 최신 Python 비미디어 회귀 | 85 PASS / 0 FAIL / 1 SKIP | `test-results/nonmedia-tests.xml`; 미디어 5건은 이번 실행 제외 |
+| React 단위 검사 | 3 PASS / 0 FAIL | Vitest 4.1.11 |
+| TypeScript/Vite build/Ruff | PASS | strict TS, Vite 7.3.6 |
+| 실제 브라우저 HWP/검토자 | 1 PASS / 0 FAIL | `test-results/browser.xml`; media request 0 |
+| 정적 Security Gate | PASS | `test-results/security-policy.json`; RBAC/IDOR 등 Python suite 포함 |
+| 실제 ClamAV | PASS | clean 통과, EICAR 차단, unavailable 차단. `clamav-result.json` |
+| npm audit | 검출 0 | `test-results/npm-audit.json` |
+| Docker Golden E2E | 기존 실행 PASS | 5개 형식, DOCX/HWP PPT·MP4·검토·IDOR. `docker-golden.json` |
+| 격리 offline 컨테이너 | 기존 실행 PASS | pull/build 없음, 새 volume, egress 차단, Golden·restart. `offline-container-result.json` |
+| 물리 clean-host/이전 릴리스 rollback | 미검증 | 최종 운영 Release 차단 사유 |
 
-## 샘플
+ClamAV 호스트 경유 테스트 1건은 내부 전용 네트워크 때문에 SKIP이다. 별도 실제 컨테이너 INSTREAM 검증으로 clean/EICAR/fail-closed를 확인했다.
+최신 코드 변경 후 사용자의 지시에 따라 PPT·영상은 새로 생성하지 않았다. 따라서 기존 미디어/Offline Golden 결과를 최신 커밋의 전체 재실행 결과로 주장하지 않는다.
 
-- `test-results/samples/golden-synthetic.pptx`: 2 slides, editable title/body/table, QA PASS.
-- 실제 Microsoft PowerPoint read-only 열기/PNG export PASS. 파일 hash는 `test-results/powerpoint-smoke.json`.
-- `test-results/samples/golden-synthetic.mp4`: 1920×1080, H.264, 24fps, 4초, ffprobe/전체 frame decode PASS.
-- QA: `test-results/samples/pptx-qa_report.json`, `mp4-qa_report.json`.
-- 렌더 증거: `test-results/powerpoint-render/`, `workspace.png`, `artifact-review.png`.
+## 기존 샘플 증거
+
+이전 승인된 작업에서 합성 DOCX/HWP PPTX와 MP4를 생성하여 QA PASS를 확인했다.
+PPTX는 편집 가능한 텍스트/표/차트 구조이며, MP4는 ffprobe와 프레임 디코드 검사 대상이다.
+기존 실제 업로드 HWP의 승인된 17장 계획도 PPTX QA 및 Microsoft PowerPoint read-only 열기/17장 export를 통과했다.
+사용자 문서·계획·산출물은 private storage에 보관하고 저장소나 공개 테스트에 포함하지 않는다.
+현재 지시 이후 새로운 PPTX/영상 생성 또는 해당 생성 테스트 실행은 하지 않았다.
 
 ## Release Bundle
 
-`release/release-bundle/capstone-0.1.0-<UTC timestamp>/`. 현재 정확한 경로는 `release/latest-bundle.txt`.
-무결성 결과는 `test-results/bundle-result.json`. SPDX, Linux/Windows wheels, frontend, workflow/locks, 모델 manifest,
-source, 테스트 증거, checksum, install/rollback 문서를 포함한다.
-**개발 검증용 `release_ready=false`**: Docker image tar/digest, 실제 ClamAV signature/통합 증거,
-clean-host no-egress/이전 release rollback, container OS SBOM은 미포함/미검증이다.
-Checksum PASS가 최종 릴리스 완료를 뜻하지 않으므로 bundle 명령은 성공 exit code를 반환하지 않는다.
+개발 snapshot 생성 명령: `python infra/scripts/bundle.py --development`.
+정확한 최신 경로는 `release/latest-bundle.txt`, checksum 검사 결과는 `test-results/bundle-result.json`에 기록한다.
+구성: source, Docker runtime.tar, image ID/digests, Python/npm/container OS SPDX SBOM, licenses, wheelhouse, frontend,
+model/workflow/prompt version·hash, release-manifest, checksums, 기존 합성 테스트 증거, INSTALL_ROLLBACK.
+`release_ready=false`: 기관 승인된 백신 갱신 정책·물리 오프라인 설치·이전 승인 릴리스 rollback 증거가 남아 있다.
+개발 bundle 무결성 PASS와 운영 반입 승인 PASS를 구분한다. 대용량 bundle은 로컬 보관하고 GitHub에는 소스/문서를 push한다.
 
-## 남은 TBD · 제한
+## Windows Remote Desktop/RemoteApp 오류
 
-TBD-NPS-NET-001, TBD-NPS-IAM-001, TBD-NPS-GPU-001, TBD-NPS-STO-001,
-TBD-NPS-SEC-001, TBD-NPS-OUT-001, TBD-NPS-PERF-001, TBD-NPS-REL-001은 모두 미확정이다.
-기관 IP/VLAN/SSO/보존기간/공식 템플릿은 추정하지 않았다.
-HWP5 미설치, 실제 LLM/Comfy/A40 미검증, 복잡 문서 fidelity/운영 부하, 원격 AI hard cancel 지연,
-일부 관리자 UI와 영상 브랜딩 제한이 남는다. 기본 template/mock 결과는 승인 후에도 공식 사용 불가다.
-세부 범위는 [implementation-status.md](implementation-status.md), [traceability-matrix.md](traceability-matrix.md)를 참조한다.
+2026-09-10 프로세스 조사에서 WSL이 실행한 `C:/Program Files/WSL/msrdc.exe`를 확인했다.
+동일 경로의 rdclientax.dll과 msrdc.exe는 버전 1.2.7214.0이며 Microsoft 서명이 정상이다.
+현재 설치된 WSL 배포판은 docker-desktop뿐이다. 사용자 프로필 `.wslconfig`에 `[wsl2] guiApplications=false`를 적용하고 Docker/WSL을 재시작했다.
+이후 msrdc 프로세스가 사라지고 Docker 기동 및 브라우저 테스트가 통과했다.
+이 조치는 WSLg GUI 연결을 사용하지 않는 개발환경 우회이며 DLL 자체의 근본 호환성 수리를 의미하지 않는다.
+Linux GUI 앱이 필요해지면 값을 true로 복원하고 WSL 종료/재시작 후 공식 WSL 구성요소를 재검증해야 한다.
+설정 근거: https://learn.microsoft.com/ko-kr/windows/wsl/wsl-config
+
+## 전체 파일 목록 / TBD / 제한
+
+실제 프로젝트 소스 전체 목록은 [file-tree.txt](file-tree.txt). 설치 캐시·비밀·개인 업로드는 제외한다.
+배포 payload 전체 파일 목록은 bundle의 checksums.sha256에 있다.
+기관 TBD 8개는 [tbd-register.md](tbd-register.md): 망, SSO, GPU, 저장/보존, 보안, 공식 출력 규격, 성능, 반입 승인.
+미완료 핵심: 복잡 HWP 표/그림/쪽 매핑, OCR·복잡 레이아웃, 실제 LLM/Comfy/GPU, 고급 발표 품질,
+관리자 상세 UI, 대규모 장애/부하 및 물리 offline/rollback. 임의 기관 값과 실제 개인정보 테스트 데이터는 사용하지 않는다.

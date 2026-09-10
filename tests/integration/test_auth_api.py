@@ -27,3 +27,22 @@ def test_scope_and_cors(client, users):
         ).status_code
         == 400
     )
+
+
+def test_owner_can_choose_same_org_reviewer(client, users):
+    auth = {"Authorization": "Bearer " + issue_access(users["demo-user"])}
+    project = client.post("/api/v1/projects", headers=auth, json={"name": "Synthetic review project"}).json()
+    url = f"/api/v1/projects/{project['id']}/reviewer-candidates"
+    candidates = client.get(url, headers=auth).json()
+    assert candidates == [{"id": users["demo-reviewer"].id, "username": "demo-reviewer"}]
+    other = {"Authorization": "Bearer " + issue_access(users["other-user"])}
+    assert client.get(url, headers=other).status_code == 403
+    reviewer = {"Authorization": "Bearer " + issue_access(users["demo-reviewer"])}
+    assert client.get(f"/api/v1/projects/{project['id']}", headers=reviewer).status_code == 403
+    added = client.post(
+        f"/api/v1/projects/{project['id']}/members",
+        headers=auth,
+        json={"user_id": candidates[0]["id"], "role": "Reviewer"},
+    )
+    assert added.status_code == 201
+    assert client.get(f"/api/v1/projects/{project['id']}", headers=reviewer).status_code == 200

@@ -30,7 +30,7 @@ def paragraph_text(payload):
         if offset + width > len(payload):
             raise DomainError("DOC_MALFORMED", 422)
         if char >= 32:
-            output.extend(payload[offset:offset + 2])
+            output.extend(payload[offset : offset + 2])
         elif char in {9, 10, 13, 24, 30, 31}:
             output.extend({9: "\t", 10: "\n", 13: "\n", 24: "-", 30: " ", 31: " "}[char].encode("utf-16le"))
         offset += width
@@ -73,7 +73,7 @@ def records(data):
         count += 1
         if count > settings().max_cells * 20 or level > 128:
             raise DomainError("DOC_RESOURCE_LIMIT", 422)
-        yield tag, level, data[offset:offset + length]
+        yield tag, level, data[offset : offset + length]
         offset += length
 
 
@@ -88,6 +88,8 @@ class HWPParser:
         with olefile.OleFileIO(path, raise_defects=olefile.DEFECT_INCORRECT) as ole:
             if not ole.exists("FileHeader"):
                 raise DomainError("DOC_MALFORMED", 422)
+            if ole.get_size("FileHeader") > 4096:
+                raise DomainError("DOC_RESOURCE_LIMIT", 422)
             header = ole.openstream("FileHeader").read(256)
             if len(header) < 256 or not header.startswith(b"HWP Document File\x00"):
                 raise DomainError("DOC_MALFORMED", 422)
@@ -104,7 +106,11 @@ class HWPParser:
             if len(names) > settings().archive_max_entries:
                 raise DomainError("DOC_RESOURCE_LIMIT", 422)
             names = sorted(
-                (n for n in names if len(n) == 2 and n[0] == "BodyText" and re.fullmatch(r"Section\d+", n[1])),
+                (
+                    n
+                    for n in names
+                    if len(n) == 2 and n[0] == "BodyText" and re.fullmatch(r"Section\d+", n[1])
+                ),
                 key=lambda n: int(n[1][7:]),
             )
             if not names:
@@ -131,17 +137,25 @@ class HWPParser:
                         node_count += 1
                         if node_count > settings().max_cells:
                             raise DomainError("DOC_RESOURCE_LIMIT", 422)
-                        nodes.append(Node(
-                            type="paragraph", text=text,
-                            source_location=SourceLocation(section=sid, paragraph=index),
-                        ))
+                        nodes.append(
+                            Node(
+                                type="paragraph",
+                                text=text,
+                                source_location=SourceLocation(section=sid, paragraph=index),
+                            )
+                        )
                 if nodes:
                     sections.append(Section(section_id=sid, heading=nodes[0].text[:80], nodes=nodes))
             if not sections:
                 raise DomainError("DOC_EMPTY", 422)
             return NormalizedDocument(
-                metadata={"format": "hwp", "fidelity": "body-text-including-cell-paragraphs",
-                          "sections": len(names), "page_mapping": "unavailable"},
-                sections=sections, parser_version=self.version,
+                metadata={
+                    "format": "hwp",
+                    "fidelity": "body-text-including-cell-paragraphs",
+                    "sections": len(names),
+                    "page_mapping": "unavailable",
+                },
+                sections=sections,
+                parser_version=self.version,
                 warnings=["HWP_TABLE_IMAGE_STRUCTURE_NOT_AVAILABLE_REVIEW_REQUIRED"],
             )

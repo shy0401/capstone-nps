@@ -102,7 +102,7 @@ class MockLLMAdapter:
                 slides.append(
                     PlannedSlide(
                         order=len(slides) + 1,
-                        title=f"합성 문서 검토 · {chunk.section_id}",
+                        title=f"문서 검토 · {chunk.section_id}",
                         layout_type=block.type if block.type in {"table", "image"} else "title_content",
                         content_blocks=[block],
                         source_refs=[ref],
@@ -114,7 +114,7 @@ class MockLLMAdapter:
         model_hash = hashlib.sha256(Path("services/llm-adapter/model-manifest.json").read_bytes()).hexdigest()
         return SlidePlanContract(
             document_versions=list({c.version_id for c in chunks}),
-            title="합성 문서 검토 계획",
+            title="문서 검토 계획",
             slides=slides,
             mock=True,
             provenance={

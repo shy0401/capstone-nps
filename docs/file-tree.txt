@@ -1,13 +1,9 @@
-capstone-nps/
+capstone-nps/ (source files; private storage, dependencies and generated evidence excluded)
   .dockerignore
   .env.example
+  .gitattributes
   .github/workflows/ci.yml
   .gitignore
-  .idea/.gitignore
-  .idea/capstone-nps.iml
-  .idea/modules.xml
-  .idea/vcs.xml
-  .idea/workspace.xml
   Makefile
   README.md
   alembic.ini
@@ -22,6 +18,7 @@ capstone-nps/
   apps/api/nps/contracts.py
   apps/api/nps/db.py
   apps/api/nps/errors.py
+  apps/api/nps/hwp.py
   apps/api/nps/jobs.py
   apps/api/nps/llm.py
   apps/api/nps/main.py
@@ -47,6 +44,7 @@ capstone-nps/
   apps/web/src/main.tsx
   apps/web/src/style.css
   apps/web/src/types.ts
+  apps/web/tests/workflow-no-media.spec.ts
   apps/web/tests/workspace.spec.ts
   apps/web/tsconfig.json
   apps/web/vite.config.ts
@@ -55,6 +53,7 @@ capstone-nps/
   compose.offline.yml
   compose.prod.yml
   compose.yml
+  docs/FEATURES_ROADMAP.md
   docs/FINAL_REPORT.md
   docs/INSTALL_ROLLBACK.md
   docs/MasterPrompt.md
@@ -70,6 +69,7 @@ capstone-nps/
   docs/reference-plan.txt
   docs/requirements.json
   docs/security.md
+  docs/srs-audit.json
   docs/tbd-register.md
   docs/threat-model.md
   docs/traceability-matrix.md
@@ -82,6 +82,7 @@ capstone-nps/
   infra/nginx/tls.conf
   infra/scripts/bootstrap.py
   infra/scripts/bundle.py
+  infra/scripts/clamav_smoke.py
   infra/scripts/document_status.py
   infra/scripts/export_contracts.py
   infra/scripts/generate_fixtures.py
@@ -102,7 +103,6 @@ capstone-nps/
   packages/contracts/visual-plan.schema.json
   prompts/slide-v1.json
   pyproject.toml
-  release/latest-bundle.txt
   requirements-dev.lock
   requirements.lock
   services/comfy-adapter/main.py
@@ -115,6 +115,7 @@ capstone-nps/
   tests/golden/fixtures/data-manifest.json
   tests/golden/fixtures/injection.docx
   tests/golden/fixtures/synthetic.docx
+  tests/golden/fixtures/synthetic.hwp
   tests/golden/fixtures/synthetic.hwpx
   tests/golden/fixtures/synthetic.pdf
   tests/golden/fixtures/synthetic.xlsx
@@ -128,7 +129,9 @@ capstone-nps/
   tests/security/test_gates.py
   tests/security/test_upload.py
   tests/unit/test_comfy.py
+  tests/unit/test_hwp.py
   tests/unit/test_llm.py
+  tests/unit/test_manage.py
   tests/unit/test_parsers.py
   tests/unit/test_phase0.py
   tests/unit/test_ppt.py
@@ -142,35 +145,3 @@ capstone-nps/
   workflows/comfy/custom_nodes.lock.json
   workflows/comfy/model-manifest.json
   workflows/comfy/wf-image-v1.json
-
-GENERATED VALIDATION ARTIFACTS
-  test-results/artifact-review.png
-  test-results/browser.xml
-  test-results/bundle-result.json
-  test-results/compose-up.json
-  test-results/coverage.json
-  test-results/docker-result.json
-  test-results/golden-result.json
-  test-results/login.png
-  test-results/migration-smoke.json
-  test-results/offline-result.json
-  test-results/offline-samples/offline.mp4
-  test-results/offline-samples/offline.pptx
-  test-results/performance.json
-  test-results/postgres-manifest.json
-  test-results/powerpoint-render/슬라이드1.PNG
-  test-results/powerpoint-render/슬라이드2.PNG
-  test-results/powerpoint-smoke.json
-  test-results/samples/golden-synthetic.mp4
-  test-results/samples/golden-synthetic.pptx
-  test-results/samples/mp4-qa_report.json
-  test-results/samples/pptx-qa_report.json
-  test-results/samples/video-frame.png
-  test-results/security-policy.json
-  test-results/test.xml
-  test-results/vitest.json
-  test-results/workspace.png
-
-Local .env contains injected secrets and is deliberately not listed by content.
-Installed .venv/.offline-venv/node_modules caches are excluded.
-Release Bundle complete payload list: checksums.sha256.

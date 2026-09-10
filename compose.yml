@@ -1,9 +1,11 @@
 name: capstone-nps
 x-runtime: &runtime
-  image: capstone-nps-api:0.1.0
+  image: capstone-nps-api:0.1.1
   build:
     context: .
     dockerfile: infra/compose/api.Dockerfile
+    args:
+      APP_GIT_SHA: ${APP_GIT_SHA:-UNKNOWN}
   env_file: .env
   environment: &env
     DATABASE_URL: postgresql+psycopg://nps:${POSTGRES_PASSWORD:?run bootstrap}@postgres:5432/nps
@@ -24,7 +26,7 @@ x-runtime: &runtime
     redis: {condition: service_healthy}
 services:
   edge:
-    image: capstone-nps-edge:0.1.0
+    image: capstone-nps-edge:0.1.1
     build:
       context: .
       dockerfile: infra/compose/edge.Dockerfile

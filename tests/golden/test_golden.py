@@ -68,7 +68,7 @@ def upload_analyze(client, db, users, fixture_dir, ext):
     return project, document_id, job.result["plan_id"]
 
 
-@pytest.mark.parametrize("ext", [".pdf", ".docx", ".xlsx", ".hwpx"])
+@pytest.mark.parametrize("ext", [".pdf", ".docx", ".xlsx", ".hwpx", ".hwp"])
 def test_golden_upload_parse_plan(client, db, users, fixture_dir, adapters, ext):
     _, doc, plan_id = upload_analyze(client, db, users, fixture_dir, ext)
     h = auth(users["demo-user"])

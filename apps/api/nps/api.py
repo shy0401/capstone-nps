@@ -177,6 +177,17 @@ def members(project_id: UUID, db: DB, user: Actor):
     ]
 
 
+@router.get("/projects/{project_id}/reviewer-candidates")
+def reviewer_candidates(project_id: UUID, db: DB, user: Actor):
+    project = authorize_project(db, user, str(project_id), owner=True)
+    return [
+        {"id": reviewer.id, "username": reviewer.username}
+        for reviewer in db.scalars(
+            select(User).where(User.org_id == project.org_id, User.role == "Reviewer", User.active.is_(True))
+        )
+    ]
+
+
 @router.post("/projects/{project_id}/members", status_code=201)
 def add_member(project_id: UUID, data: MemberInput, db: DB, user: Actor):
     project = authorize_project(db, user, str(project_id), owner=True)

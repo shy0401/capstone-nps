@@ -53,6 +53,15 @@ def test_worker_heartbeat_and_queue_routing(db, users, queue):
     assert claim(db, "document", "worker-1").id == job.id
 
 
+def test_qa_failed_artifact_requires_review(db, users, queue):
+    user = users["demo-user"]
+    project = db.scalar(select(Project).where(Project.owner_id == user.id))
+    job = create_job(db, user, project.id, "ppt", {})
+    run_until_terminal(db, job.id, lambda db, job, step, cancelled: {"qa_status": "FAIL"})
+    assert job.state == "WAITING_REVIEW"
+    assert job.result["qa_status"] == "FAIL"
+
+
 def test_ws_equals_rest_and_idor(client, db, users, queue):
     user = users["demo-user"]
     project = db.scalar(select(Project).where(Project.owner_id == user.id))

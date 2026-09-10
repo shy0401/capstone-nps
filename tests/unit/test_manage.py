@@ -26,7 +26,10 @@ def test_capture_utf8_and_invalid_bytes():
 
 @pytest.mark.parametrize("format", ["array", "jsonl"])
 def test_compose_json_formats(format):
-    rows = [{"Service": "edge", "Publishers": [{"PublishedPort": 8080}]}, {"Service": "api"}]
+    rows = [
+        {"Service": "edge", "State": "running", "Publishers": [{"PublishedPort": 8080}]},
+        {"Service": "api", "State": "running", "Health": "healthy"},
+    ]
     output = json.dumps(rows, indent=2) if format == "array" else "\n".join(map(json.dumps, rows))
     result = manage.compose_status(subprocess.CompletedProcess([], 0, output, ""))
     assert result["status"] == "PASS"
@@ -51,6 +54,14 @@ def test_published_database_fails_gate():
     assert manage.compose_status(subprocess.CompletedProcess([], 0, output, ""))["status"] == "FAIL"
 
 
+@pytest.mark.parametrize("state,health", [("exited", ""), ("running", "unhealthy"), ("running", "starting")])
+def test_nonhealthy_service_fails_gate(state, health):
+    output = json.dumps([{"Service": "api", "State": state, "Health": health}])
+    result = manage.compose_status(subprocess.CompletedProcess([], 0, output, ""))
+    assert result["status"] == "FAIL"
+    assert "not running/healthy" in result["reason"]
+
+
 def test_daemon_timeout_returns_blocked(tmp_path, monkeypatch):
     monkeypatch.setattr(manage, "ROOT", tmp_path)
     monkeypatch.setattr(manage, "docker_binary", lambda: "docker")
@@ -62,3 +73,32 @@ def test_daemon_timeout_returns_blocked(tmp_path, monkeypatch):
     result = manage.docker_gate()
     assert result["status"] == "BLOCKED"
     assert "timed out" in result["reason"]
+
+
+def test_missing_service_fails_gate():
+    output = json.dumps([{"Service": "edge", "State": "running"}])
+    result = manage.compose_status(subprocess.CompletedProcess([], 0, output, ""), {"edge", "api"})
+    assert result["status"] == "FAIL"
+    assert "Missing Compose services: api" == result["reason"]
+
+
+def test_other_profile_orphan_does_not_fail_current_profile():
+    output = json.dumps(
+        [
+            {"Service": "edge", "State": "running"},
+            {"Service": "clamav", "State": "exited"},
+        ]
+    )
+    result = manage.compose_status(subprocess.CompletedProcess([], 0, output, ""), {"edge"})
+    assert result["status"] == "PASS"
+    assert result["service_count"] == 1
+
+
+def test_orphan_external_port_still_fails_gate():
+    output = json.dumps(
+        [
+            {"Service": "edge", "State": "running"},
+            {"Service": "extra", "State": "running", "Publishers": [{"PublishedPort": 9000}]},
+        ]
+    )
+    assert manage.compose_status(subprocess.CompletedProcess([], 0, output, ""), {"edge"})["status"] == "FAIL"

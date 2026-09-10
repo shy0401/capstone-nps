@@ -7,3 +7,6 @@ RUN pip install --no-cache-dir -r requirements.lock
 COPY . .
 RUN useradd --uid 10001 --create-home nps && mkdir -p /app/storage && chown -R nps:nps /app
 USER 10001
+
+ARG APP_GIT_SHA=UNKNOWN
+ENV APP_GIT_SHA=$APP_GIT_SHA

@@ -29,23 +29,23 @@ def command(args, **kwargs):
 def capture_command(args, *, timeout):
     """Docker emits UTF-8 even when the Windows locale defaults to CP949."""
     try:
-        return subprocess.run(
-            args, capture_output=True, encoding="utf-8", errors="replace", timeout=timeout
-        )
+        return subprocess.run(args, capture_output=True, encoding="utf-8", errors="replace", timeout=timeout)
     except (subprocess.TimeoutExpired, OSError) as exc:
         return subprocess.CompletedProcess(args, 1, "", str(exc))
 
 
-def compose_status(ps):
+def compose_status(ps, expected_services=None):
     failed = {"status": "FAIL", "published_ports": None}
     if ps.returncode:
         return {**failed, "reason": (ps.stderr or ps.stdout or "Docker Compose ps failed").strip()[:1000]}
     try:
         output = (ps.stdout or "").strip()
         # Compose versions emit either a JSON array or newline-delimited objects.
-        rows = json.loads(output) if output.startswith("[") else [
-            json.loads(line) for line in output.splitlines() if line.strip()
-        ]
+        rows = (
+            json.loads(output)
+            if output.startswith("[")
+            else [json.loads(line) for line in output.splitlines() if line.strip()]
+        )
         if not isinstance(rows, list) or any(not isinstance(r, dict) or "Service" not in r for r in rows):
             raise ValueError("Expected Compose service objects")
         publishes = {r["Service"]: r.get("Publishers", []) for r in rows if r.get("Publishers")}
@@ -54,17 +54,29 @@ def compose_status(ps):
             for name, ports in publishes.items()
             if name != "edge" and any(p.get("PublishedPort") for p in ports)
         ]
+        if expected_services is not None:
+            rows = [r for r in rows if r["Service"] in expected_services]
+        missing = set(expected_services or []) - {r["Service"] for r in rows}
+        unhealthy = [
+            r["Service"]
+            for r in rows
+            if r.get("State") != "running" or r.get("Health", "") not in {"", "healthy"}
+        ]
     except (ValueError, TypeError, AttributeError) as exc:
         return {**failed, "reason": f"Invalid Docker Compose status output: {exc}"}
     result = {
-        "status": "PASS" if rows and not outside else "FAIL",
+        "status": "PASS" if rows and not missing and not outside and not unhealthy else "FAIL",
         "published_ports": publishes,
         "service_count": len(rows),
     }
     if not rows:
         result["reason"] = "No running Compose services found"
+    elif missing:
+        result["reason"] = "Missing Compose services: " + ", ".join(sorted(missing))
     elif outside:
         result["reason"] = "Non-edge services publish ports: " + ", ".join(outside)
+    elif unhealthy:
+        result["reason"] = "Services not running/healthy: " + ", ".join(unhealthy)
     return result
 
 
@@ -99,10 +111,32 @@ def docker_gate(start=False):
                     timeout=1800,
                 )
             ps = capture_command(
-                [docker, "compose", "-f", "compose.yml", "-f", "compose.dev.yml", "ps", "--format", "json"],
+                [
+                    docker,
+                    "compose",
+                    "-f",
+                    "compose.yml",
+                    "-f",
+                    "compose.dev.yml",
+                    "ps",
+                    "--all",
+                    "--format",
+                    "json",
+                ],
                 timeout=30,
             )
-            result = compose_status(ps)
+            config = capture_command(
+                [docker, "compose", "-f", "compose.yml", "-f", "compose.dev.yml", "config", "--services"],
+                timeout=30,
+            )
+            if config.returncode or not (config.stdout or "").strip():
+                result = {
+                    "status": "FAIL",
+                    "reason": "Cannot resolve expected Compose services",
+                    "published_ports": None,
+                }
+            else:
+                result = compose_status(ps, set(config.stdout.splitlines()))
     (ROOT / "test-results").mkdir(exist_ok=True)
     (ROOT / "test-results/docker-result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))

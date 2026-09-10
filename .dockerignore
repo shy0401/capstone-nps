@@ -6,4 +6,13 @@ storage
 release
 test-results
 .env
+.env.*
+!.env.example
+.idea
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/*.key
+**/*.pem
+**/secrets
 infra/secrets

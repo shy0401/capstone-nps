@@ -220,7 +220,8 @@ def execute_step(db, job_id, handler=None):
         completed = pipeline.index(step_name) + 1
         job.progress = int(completed / len(pipeline) * 100)
         if completed == len(pipeline):
-            transition(job, "WAITING_REVIEW" if job.kind in {"analyze", "plan"} else "SUCCEEDED")
+            needs_review = job.kind in {"analyze", "plan"} or output.get("qa_status") == "FAIL"
+            transition(job, "WAITING_REVIEW" if needs_review else "SUCCEEDED")
             job.result = output
         else:
             job.step = pipeline[completed]

@@ -31,10 +31,14 @@ def run():
     calls = []
 
     def command(args, timeout=300):
-        result = subprocess.run(args, capture_output=True, text=True, timeout=timeout, cwd=ROOT)
+        result = subprocess.run(
+            args, capture_output=True, encoding="utf-8", errors="replace", timeout=timeout, cwd=ROOT
+        )
         calls.append({"operation": " ".join(args[:5]), "exit_code": result.returncode})
         if result.returncode:
-            raise RuntimeError("OFFLINE_CONTAINER_COMMAND_FAILED")
+            raise RuntimeError(
+                "OFFLINE_CONTAINER_COMMAND_FAILED: " + (result.stderr or result.stdout)[-1500:]
+            )
         return result.stdout
 
     outcome = {"status": "BLOCKED", "project": project}
@@ -45,6 +49,7 @@ def run():
         command(compose + ["exec", "-T", "api", "python", "-c", seed])
         egress = "import socket,sys\ntry:\n socket.create_connection(('example.com',443),3)\nexcept OSError:\n sys.exit(0)\nelse:\n sys.exit(1)"
         command(compose + ["exec", "-T", "api", "python", "-c", egress])
+        command(compose + ["exec", "-T", "api", "python", "infra/scripts/clamav_smoke.py"])
         command(compose + ["exec", "-T", "api", "python", "infra/scripts/http_e2e.py"], timeout=600)
         command(
             compose
@@ -64,7 +69,7 @@ def run():
             "previous_release_rollback": "NOT_VERIFIED",
         }
     except (RuntimeError, FileNotFoundError, subprocess.TimeoutExpired) as exc:
-        outcome["reason"] = type(exc).__name__
+        outcome["reason"] = str(exc)
     finally:
         if docker:
             try:

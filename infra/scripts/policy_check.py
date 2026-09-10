@@ -24,6 +24,8 @@ def source_files():
         "test-results",
         ".tools",
         ".offline-venv",
+        ".idea",
+        "secrets",
     }
     files = []
     for directory, dirs, names in os.walk(ROOT):
@@ -31,7 +33,9 @@ def source_files():
         files.extend(
             Path(directory) / n
             for n in names
-            if n not in {".env", ".coverage"} and not n.endswith((".pyc", ".db", ".tsbuildinfo"))
+            if (not n.startswith(".env") or n == ".env.example")
+            and n != ".coverage"
+            and not n.endswith((".pyc", ".db", ".tsbuildinfo", ".key", ".pem"))
         )
     return files
 

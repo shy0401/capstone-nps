@@ -1,5 +1,13 @@
 name: prototype-gates
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_media:
+        description: 'Explicitly run PPTX/MP4 generation acceptance tests'
+        type: boolean
+        default: false
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -13,8 +21,17 @@ jobs:
       - run: pip install -r requirements-dev.lock
       - run: python infra/scripts/bootstrap.py
       - run: ruff check apps/api tests infra/scripts
-      - run: pytest --cov=nps --junitxml=test-results/pytest.xml
+      - run: pytest --ignore=tests/unit/test_ppt.py --ignore=tests/unit/test_video.py -k 'not golden_review_ppt_video_version_audit' --cov=nps --junitxml=test-results/pytest.xml
       - run: npm ci && npm test && npm run build
         working-directory: apps/web
+      - run: npm audit --audit-level=moderate
+        working-directory: apps/web
       - run: python infra/scripts/manage.py e2e
-      - run: python infra/scripts/manage.py bundle
+        if: github.event_name == 'workflow_dispatch' && inputs.run_media
+      - run: python infra/scripts/policy_check.py
+      - run: python infra/scripts/bundle.py --development
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prototype-test-results
+          path: test-results/

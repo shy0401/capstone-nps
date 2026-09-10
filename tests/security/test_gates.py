@@ -1,4 +1,5 @@
 import zipfile
+from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 from nps.config import settings
@@ -95,7 +96,7 @@ def test_real_clamav_eicar(tmp_path):
 
     if os.environ.get("RUN_CLAMAV_TEST") != "1":
         pytest.skip(
-            "real ClamAV container unavailable on this host; deterministic fail-closed tests run separately"
+            "requires RUN_CLAMAV_TEST=1 and routed ClamAV; container integration is also covered by clamav_smoke.py"
         )
     p = tmp_path / "eicar.com"
     # Standard non-executable antivirus test string, synthesized only in a temporary fixture.

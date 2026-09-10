@@ -30,4 +30,12 @@
 6. 이전 bundle의 compose를 `up -d --no-build --pull never --wait`, Golden/권한/다운로드 smoke를 수행한다.
 7. `alembic downgrade base`는 개발 empty DB 시험용이며 운영 rollback 절차가 아니다.
 
-이 호스트에서는 Docker 가상화 비활성으로 image import, clean container install, 실제 rollback을 실행하지 못했다.
+v0.1.1에서 Docker 기동 및 독립 신규 volumes의 no-build/no-pull/egress deny 검증을 수행했다. 물리 clean-host 반입 및 이전 승인 bundle 기반 DB/storage rollback은 미검증이다.
+
+
+## 개발용 묶음의 재현
+
+기관 운영 반입과 별도로 `bundle.py --development`로 만든 CPU/mock 개발 묶음을 검증할 수 있다.
+`verify_bundle.py <bundle>`로 checksum을 확인하고 `docker load -i <bundle>/images/runtime.tar`를 수행한다.
+묶음의 `source/`로 이동해 bootstrap으로 새 secret을 생성한 뒤 `docker compose -f compose.yml -f compose.dev.yml up -d --no-build --pull never --wait`를 실행한다.
+LLM/Comfy mock과 기본 템플릿 표시를 유지하며, 운영 `--require-ready` 검증을 대신하지 않는다.

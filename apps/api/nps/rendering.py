@@ -1,5 +1,6 @@
 import subprocess
 import time
+from functools import lru_cache
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from nps.config import settings
@@ -32,10 +33,36 @@ def wrap_text(text, font, width):
     return lines
 
 
+@lru_cache(maxsize=32)
+def metric_font(path, size):
+    return ImageFont.truetype(path, size)
+
+
 def text_fits(text, points, width_inches, height_inches):
-    font = ImageFont.truetype(font_file(), round(points * 96 / 72))
+    font = metric_font(font_file(), round(points * 96 / 72))
     lines = wrap_text(text, font, width_inches * 96)
     return len(lines) * points * 96 / 72 * 1.3 <= height_inches * 96
+
+
+def text_layout(text, width, height, preferred, minimum):
+    """Preserve all paragraphs; fit at readable size, then flow into columns."""
+    for columns in (1, 2, 3, 4):
+        column_width = (width - 0.3 * (columns - 1)) / columns
+        for size in range(int(preferred), int(minimum) - 1, -1):
+            parts, current = [], []
+            for paragraph in text.split("\n"):
+                candidate = "\n".join(current + [paragraph])
+                if current and not text_fits(candidate, size, column_width - 0.12, height - 0.08):
+                    parts.append("\n".join(current))
+                    current = []
+                current.append(paragraph)
+            parts.append("\n".join(current))
+            if len(parts) <= columns and all(
+                text_fits(p, size, column_width - 0.12, height - 0.08) for p in parts
+            ):
+                return size, column_width, parts
+    # No text is discarded. PPT QA will route the oversized draft to review.
+    return minimum, width, [text]
 
 
 def preview_slide(slide, path, policy, image_path=None):
@@ -43,19 +70,29 @@ def preview_slide(slide, path, policy, image_path=None):
     image = Image.new("RGB", (1920, 1080), "#" + policy["background"])
     draw = ImageDraw.Draw(image)
     title_font = ImageFont.truetype(font_file(), 58)
-    body_font = ImageFont.truetype(font_file(), 38)
     small = ImageFont.truetype(font_file(), 25)
     draw.text((90, 80), slide["title"], font=title_font, fill="#" + policy["foreground"])
-    y = 240
+    y = 1.65 * 144
+    available = 4.7 / len(slide["content_blocks"])
     for block in slide["content_blocks"]:
         text = (
             "\n".join("   |   ".join(row) for row in block.get("cells", []))
             if block["type"] in {"table", "chart"}
             else block.get("text", "")
         )
-        for line in wrap_text(text, body_font, 1700):
-            draw.text((90, y), line, font=body_font, fill="#" + policy["foreground"])
-            y += 55
+        size, width, parts = text_layout(text, 12, available - 0.1, policy["body_pt"], policy["min_font_pt"])
+        body_font = ImageFont.truetype(font_file(), round(size * 2))
+        for index, part in enumerate(parts):
+            if not text_fits(part, size, width - 0.12, available - 0.18):
+                raise DomainError("VIDEO_CONTENT_OVERFLOW", 422)
+            for row, line in enumerate(wrap_text(part, body_font, (width - 0.12) * 144)):
+                draw.text(
+                    (94 + index * (width + 0.3) * 144, y + row * size * 2 * 1.3),
+                    line,
+                    font=body_font,
+                    fill="#" + policy["foreground"],
+                )
+        y += available * 144
     if image_path:
         with Image.open(image_path) as visual:
             visual.thumbnail((800, 500))

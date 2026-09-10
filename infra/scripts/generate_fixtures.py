@@ -10,14 +10,21 @@ import zlib
 
 def hwp_fixture(path, *, compressed=True, flags=0, body=None):
     """Minimal synthetic CFB/HWP parser fixture; not a Hancom layout fidelity fixture."""
+
     def record(tag, payload, level=0):
         size = len(payload)
         head = struct.pack("<I", tag | (level << 10) | (min(size, 4095) << 20))
         return head + (struct.pack("<I", size) if size >= 4095 else b"") + payload
 
     if body is None:
-        body = b"".join(record(66, bytes(22)) + record(67, (text + "\r").encode("utf-16le"), 1)
-                        for text in ["합성 한글 검증 보고서", "가상의 처리 건수는 30건입니다.", "검증 A 12건, 검증 B 18건입니다."])
+        body = b"".join(
+            record(66, bytes(22)) + record(67, (text + "\r").encode("utf-16le"), 1)
+            for text in [
+                "합성 한글 검증 보고서",
+                "가상의 처리 건수는 30건입니다.",
+                "검증 A 12건, 검증 B 18건입니다.",
+            ]
+        )
     if compressed:
         encoder = zlib.compressobj(wbits=-15)
         body = (encoder.compress(body) + encoder.flush()).ljust(4096, b"\0")
@@ -39,13 +46,17 @@ def hwp_fixture(path, *, compressed=True, flags=0, body=None):
     def entry(name, kind, child=free, left=free, start=end, size=0, color=1):
         data = bytearray(128)
         encoded = (name + "\0").encode("utf-16le")
-        data[:len(encoded)] = encoded
+        data[: len(encoded)] = encoded
         struct.pack_into("<HBBIII", data, 64, len(encoded), kind, color, left, free, child)
         struct.pack_into("<IQ", data, 116, start, size)
         return data
 
-    directory = (entry("Root Entry", 5, child=1) + entry("FileHeader", 2, left=2, start=1, size=4096)
-                 + entry("BodyText", 1, child=3, color=0) + entry("Section0", 2, start=9, size=len(body)))
+    directory = (
+        entry("Root Entry", 5, child=1)
+        + entry("FileHeader", 2, left=2, start=1, size=4096)
+        + entry("BodyText", 1, child=3, color=0)
+        + entry("Section0", 2, start=9, size=len(body))
+    )
     file_header = bytearray(4096)
     file_header[:17] = b"HWP Document File"
     struct.pack_into("<II", file_header, 32, 0x05000300, flags | int(compressed))
@@ -55,8 +66,9 @@ def hwp_fixture(path, *, compressed=True, flags=0, body=None):
         for i in range(start, start + count):
             fat[i] = i + 1 if i < start + count - 1 else end
     fat[fat_id] = fat_marker
-    path.write_bytes(header + directory + file_header + body.ljust(body_sectors * 512, b"\0")
-                     + struct.pack("<128I", *fat))
+    path.write_bytes(
+        header + directory + file_header + body.ljust(body_sectors * 512, b"\0") + struct.pack("<128I", *fat)
+    )
 
 
 def generate(root: Path):
@@ -112,7 +124,9 @@ def generate(root: Path):
             {
                 "classification": "synthetic",
                 "real_personal_data": False,
-                "files": [p.name for p in root.iterdir() if p.suffix in {".docx", ".xlsx", ".pdf", ".hwpx", ".hwp"}],
+                "files": [
+                    p.name for p in root.iterdir() if p.suffix in {".docx", ".xlsx", ".pdf", ".hwpx", ".hwp"}
+                ],
             },
             ensure_ascii=False,
             indent=2,
