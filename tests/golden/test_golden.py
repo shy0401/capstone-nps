@@ -80,6 +80,54 @@ def test_golden_upload_parse_plan(client, db, users, fixture_dir, adapters, ext)
     assert check(client.get(f"/api/v1/documents/{doc}/chunks", headers=h))
 
 
+def test_prototype_pass_preserves_scope_validation_and_real_approval(
+    client, db, users, fixture_dir, adapters, monkeypatch
+):
+    from nps.config import settings
+    from nps.models import Approval, GenerationJob
+
+    project, doc, plan_id = upload_analyze(client, db, users, fixture_dir, ".hwp")
+    monkeypatch.setattr(settings(), "review_mode", "prototype-pass")
+    h, other = auth(users["demo-user"]), auth(users["other-user"])
+    assert check(client.get("/api/v1/me", headers=h))["review_mode"] == "prototype-pass"
+    jobs = []
+    for kind in ["ppt", "video", "images"]:
+        url = f"/api/v1/slide-plans/{plan_id}/generate-{kind}"
+        assert client.post(url, headers=other).status_code == 403
+        job = check(client.post(url, headers=h), 202)
+        jobs.append(job["id"])
+        assert db.get(GenerationJob, job["id"]).payload["review_mode"] == "prototype-pass"
+    plan = db.get(SlidePlan, plan_id)
+    assert plan.status == "VALIDATED" and plan.approved_version is None
+    assert not db.scalars(select(Approval)).all()
+    assert (
+        len(db.scalars(select(AuditEvent).where(AuditEvent.action == "PROTOTYPE_REVIEW_BYPASS")).all()) == 3
+    )
+    # Evidence validation still applies even when human review is bypassed.
+    original = plan.data
+    invalid = json.loads(json.dumps(original))
+    invalid["slides"][0]["source_refs"][0]["chunk_id"] = str(uuid4())
+    plan.data = invalid
+    db.commit()
+    assert client.post(f"/api/v1/slide-plans/{plan_id}/generate-ppt", headers=h).status_code == 422
+    plan.data = original
+    db.commit()
+    # Switching back to strict also blocks already queued unapproved generation.
+    monkeypatch.setattr(settings(), "review_mode", "strict")
+    job = run_until_terminal(db, jobs[0])
+    assert job.state == "FAILED" and job.error_code == "PLAN_REVIEW_REQUIRED"
+
+
+def test_prototype_analysis_completes_without_review(client, db, users, fixture_dir, adapters, monkeypatch):
+    from nps.config import settings
+
+    _, doc, _ = upload_analyze(client, db, users, fixture_dir, ".docx")
+    monkeypatch.setattr(settings(), "review_mode", "prototype-pass")
+    job = check(client.post(f"/api/v1/documents/{doc}/analyze", headers=auth(users["demo-user"])), 202)
+    result = run_until_terminal(db, job["id"])
+    assert result.state == "SUCCEEDED" and result.result["plan_id"]
+
+
 def test_golden_review_ppt_video_version_audit(client, db, users, fixture_dir, adapters):
     project, doc, plan_id = upload_analyze(client, db, users, fixture_dir, ".docx")
     h, rh, other = auth(users["demo-user"]), auth(users["demo-reviewer"]), auth(users["other-user"])
@@ -189,6 +237,6 @@ def test_golden_review_ppt_video_version_audit(client, db, users, fixture_dir, a
         "real_parsers": True,
         "ppt_qa": "PASS",
         "mp4_ffprobe": "PASS",
-        "container_e2e": "BLOCKED_HOST_VIRTUALIZATION",
+        "container_e2e": "separate docker-golden.json / prototype-generation.json evidence",
     }
     (samples.parent / "golden-result.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

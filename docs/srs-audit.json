@@ -1,9 +1,9 @@
 {
-  "version": "0.1.1",
-  "scope": "CPU/mock prototype; PASS is requirement-specific, not institutional release approval",
+  "version": "0.1.2",
+  "scope": "Strict review implementation audit. Dev prototype-pass is an explicit user-requested exception to human review; it is rejected outside dev.",
   "must_counts": {
-    "PASS": 72,
-    "PARTIAL": 22,
+    "PASS": 73,
+    "PARTIAL": 21,
     "TBD": 1
   },
   "requirements": [
@@ -79,10 +79,10 @@
       "requirement": "관리자는 사용자의 활성/비활성 상태와 역할을 변경할 수 있고 변경 이력은 AuditEvent에 기록되어야 한다.",
       "acceptance": "역할 변경 전후값·수행자·시간이 감사로그에 남는다.",
       "target": "/admin/users, AuditEvent",
-      "status": "PARTIAL",
-      "implementation": "auth.py / api.py",
-      "evidence": "tests/security/test_authz.py",
-      "notes": "선택 요구: 기본 경로 구현, 전수 수용 시험 미완료."
+      "status": "PASS",
+      "implementation": "api.py / auth.py / apps/web/src/settings.tsx",
+      "evidence": "tests/integration/test_auth_api.py",
+      "notes": "조직 scope 사용자 목록, 역할/활성 UI, 변경 전후 역할·활성 및 행위자·시간 감사로그."
     },
     {
       "id": "FR-PRJ-001",
@@ -90,10 +90,10 @@
       "requirement": "사용자는 프로젝트를 생성하고 프로젝트명, 설명, 조직, 보안등급, 기본 PPT 템플릿을 지정할 수 있어야 한다.",
       "acceptance": "프로젝트 생성·조회·수정 API와 UI가 동작한다.",
       "target": "/projects, Project",
-      "status": "PARTIAL",
-      "implementation": "api.py",
-      "evidence": "tests/integration/test_auth_api.py",
-      "notes": "생성/조회/수정 API 및 생성 UI 구현. UI의 보안등급·템플릿·프로젝트 수정 설정은 제한적."
+      "status": "PASS",
+      "implementation": "api.py / apps/web/src/settings.tsx",
+      "evidence": "tests/integration/test_auth_api.py / prototype-generation.spec.ts",
+      "notes": "프로젝트 생성/조회/설정 UI와 소유자 scope. 이름·설명·보안등급·템플릿 수정, 생성자 조직 귀속."
     },
     {
       "id": "FR-PRJ-002",

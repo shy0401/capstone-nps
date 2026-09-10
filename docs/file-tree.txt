@@ -42,8 +42,10 @@ capstone-nps/ (source files; private storage, dependencies and generated evidenc
   apps/web/src/api.test.ts
   apps/web/src/api.ts
   apps/web/src/main.tsx
+  apps/web/src/settings.tsx
   apps/web/src/style.css
   apps/web/src/types.ts
+  apps/web/tests/prototype-generation.spec.ts
   apps/web/tests/workflow-no-media.spec.ts
   apps/web/tests/workspace.spec.ts
   apps/web/tsconfig.json
@@ -128,6 +130,7 @@ capstone-nps/ (source files; private storage, dependencies and generated evidenc
   tests/integration/test_resilience.py
   tests/security/test_authz.py
   tests/security/test_gates.py
+  tests/security/test_review_mode.py
   tests/security/test_upload.py
   tests/unit/test_comfy.py
   tests/unit/test_hwp.py

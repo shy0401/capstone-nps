@@ -19,9 +19,10 @@ test('HWP and reviewer membership without media generation',async({page})=>{
   const projectName=`Synthetic HWP UI ${Date.now()}`;
   await page.getByLabel('프로젝트 이름',{exact:true}).fill(projectName);
   await page.getByRole('button',{name:'만들기',exact:true}).click();
-  await page.getByLabel('검토자 선택').selectOption({label:'demo-reviewer'});
+  const reviewPass=await page.getByText('프로토타입-검토패스 · 검토자 승인 없이',{exact:false}).isVisible();
+  if(!reviewPass){await page.getByLabel('검토자 선택').selectOption({label:'demo-reviewer'});
   await page.getByRole('button',{name:'검토자 추가',exact:true}).click();
-  await expect(page.getByRole('status')).toContainText('검토자를 프로젝트에 추가');
+  await expect(page.getByRole('status')).toContainText('검토자를 프로젝트에 추가');}
   await page.getByLabel('문서 업로드').setInputFiles(path.join(root,'tests/golden/fixtures/synthetic.hwp'));
   const document=page.getByRole('button').filter({hasText:'synthetic.hwp'}).last();
   await expect(document).toContainText('보안검사 완료',{timeout:45000});
@@ -30,12 +31,13 @@ test('HWP and reviewer membership without media generation',async({page})=>{
   await expect(page.getByRole('button',{name:'계획 보기'})).toBeVisible({timeout:60000});
   await page.getByRole('button',{name:'계획 보기'}).click();
   await expect(page.getByText('HWP 본문과 표 안의 글자를 추출했습니다.',{exact:false})).toBeVisible();
-  await expect(page.getByRole('button',{name:'PPTX 생성',exact:true})).toBeDisabled();
+  if(!reviewPass){await expect(page.getByRole('button',{name:'PPTX 생성',exact:true})).toBeDisabled();
   await page.getByTitle('로그아웃').click();
   await login('demo-reviewer');
   await page.getByLabel('프로젝트 선택').selectOption({label:projectName});
   await page.getByRole('button').filter({hasText:'synthetic.hwp'}).last().click();
   await page.getByRole('button',{name:'계획 승인',exact:true}).click();
+  }
   await expect(page.getByRole('button',{name:'PPTX 생성',exact:true})).toBeEnabled();
   expect(mediaRequests).toEqual([]);
   expect(errors).toEqual([]);

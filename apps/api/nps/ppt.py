@@ -273,9 +273,10 @@ def persist_artifact(db, job, plan, kind, key, qa, extra):
     qa_key = storage.write_json("qa", qa)
     provenance = {
         **plan.data["provenance"],
-        "app_version": "0.1.1",
+        "app_version": "0.1.2",
         "plan_id": plan.id,
         "plan_version": plan.version,
+        "review_mode": job.payload.get("review_mode", "strict"),
         "template_id": template.id,
         "template_version": template.version,
         "official_template": template.official_flag,

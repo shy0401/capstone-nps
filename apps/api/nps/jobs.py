@@ -79,6 +79,8 @@ def enqueue(job):
 
 
 def create_job(db, user, project_id, kind, payload, key=None):
+    if kind in {"ppt", "video", "image"}:
+        payload = {**payload, "review_mode": settings().review_mode}
     key = key or uid()
     if len(key) > 100:
         raise DomainError("IDEMPOTENCY_INVALID", 422)
@@ -115,6 +117,15 @@ def create_job(db, user, project_id, kind, payload, key=None):
     for step in PIPELINES[kind]:
         db.add(JobStep(job_id=job.id, step_type=step))
     audit(db, user, "JOB_CREATE", job.id, project_id)
+    if payload.get("review_mode") == "prototype-pass":
+        audit(
+            db,
+            user,
+            "PROTOTYPE_REVIEW_BYPASS",
+            job.id,
+            project_id,
+            detail={"plan_id": payload["plan_id"], "plan_version": payload["plan_version"]},
+        )
     db.commit()
     enqueue(job)
     return job
@@ -128,6 +139,7 @@ def snapshot(db, job):
         "id": job.id,
         "project_id": job.project_id,
         "kind": job.kind,
+        "document_id": job.payload.get("document_id"),
         "state": job.state,
         "step": job.step,
         "progress": job.progress,

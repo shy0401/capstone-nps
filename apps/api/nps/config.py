@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 from pathlib import Path
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -7,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     environment: str = "dev"
+    review_mode: Literal["strict", "prototype-pass"] = "strict"
     database_url: str = "sqlite:///./storage/local.db"
     redis_url: str = "redis://redis:6379/0"
     storage_root: Path = Path("storage")
@@ -54,12 +56,18 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def secure_configuration(self):
+        if self.review_mode == "prototype-pass" and self.environment != "dev":
+            raise ValueError("prototype-pass review mode is available only in dev")
         if self.environment in {"prod", "offline"}:
             if self.scan_mode != "clamav" or self.dev_insecure_cookie:
                 raise ValueError("prod/offline requires real malware scan and secure cookies")
             if self.database_url.startswith("sqlite"):
                 raise ValueError("prod/offline requires PostgreSQL")
         return self
+
+    @property
+    def prototype_review_pass(self):
+        return self.environment == "dev" and self.review_mode == "prototype-pass"
 
 
 @lru_cache

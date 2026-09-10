@@ -150,7 +150,20 @@ def require_admin(user, system=False):
 def audit(db, user, action, target, project_id="system", correlation_id=None, result="SUCCESS", detail=None):
     # Only bounded metadata enters the audit stream. Never document text or review comments.
     safe = {
-        k: v for k, v in (detail or {}).items() if k in {"old_role", "new_role", "version", "step", "mode"}
+        k: v
+        for k, v in (detail or {}).items()
+        if k
+        in {
+            "old_role",
+            "new_role",
+            "old_active",
+            "new_active",
+            "plan_id",
+            "plan_version",
+            "version",
+            "step",
+            "mode",
+        }
     }
     db.add(
         AuditEvent(

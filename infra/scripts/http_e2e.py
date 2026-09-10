@@ -42,7 +42,7 @@ def run():
             raise TimeoutError("Golden job deadline exceeded")
 
         reviewer = login("demo-reviewer")
-        login("demo-user")
+        review_pass = login("demo-user").get("review_mode") == "prototype-pass"
         project = request(
             "POST",
             "/projects",
@@ -67,8 +67,10 @@ def run():
                 )
             wait(uploaded["job"]["id"])
             analysis = request("POST", f"/documents/{uploaded['document_id']}/analyze")
-            plan_id = wait(analysis["id"], "WAITING_REVIEW")["result"]["plan_id"]
-            for kind in ["ppt", "video", "images"]:
+            plan_id = wait(analysis["id"], "SUCCEEDED" if review_pass else "WAITING_REVIEW")["result"][
+                "plan_id"
+            ]
+            for kind in [] if review_pass else ["ppt", "video", "images"]:
                 assert client.post(f"/slide-plans/{plan_id}/generate-{kind}").status_code == 409
             parsed = request("GET", f"/documents/{uploaded['document_id']}/parse-result")
             assert request("GET", f"/documents/{uploaded['document_id']}/chunks")
@@ -76,22 +78,26 @@ def run():
                 "format": extension,
                 "plan_id": plan_id,
                 "parse": "PASS",
-                "review_gate": "PASS",
+                "review_gate": "PROTOTYPE_BYPASS" if review_pass else "PASS",
                 "parser_version": parsed["parser_version"],
             }
             if extension in {"docx", "hwp"}:
-                login("demo-reviewer")
-                request("POST", f"/slide-plans/{plan_id}/approve", json={"version": 1, "decision": "approve"})
+                if not review_pass:
+                    login("demo-reviewer")
+                    request(
+                        "POST", f"/slide-plans/{plan_id}/approve", json={"version": 1, "decision": "approve"}
+                    )
                 for kind in ["ppt", "video"]:
                     job = request("POST", f"/slide-plans/{plan_id}/generate-{kind}")
                     artifact = wait(job["id"])["result"]
                     assert artifact["qa_status"] == "PASS"
                     artifact_id = artifact["artifact_id"]
-                    request(
-                        "POST",
-                        f"/artifacts/{artifact_id}/approve",
-                        json={"version": 1, "decision": "approve"},
-                    )
+                    if not review_pass:
+                        request(
+                            "POST",
+                            f"/artifacts/{artifact_id}/approve",
+                            json={"version": 1, "decision": "approve"},
+                        )
                     response = client.get(f"/artifacts/{artifact_id}/download")
                     response.raise_for_status()
                     suffix = "pptx" if kind == "ppt" else "mp4"
@@ -99,10 +105,14 @@ def run():
                     sample.parent.mkdir(parents=True, exist_ok=True)
                     sample.write_bytes(response.content)
                     assert sample.stat().st_size > 1000
-                    result[kind] = {**artifact, "download_bytes": sample.stat().st_size, "review": "PASS"}
+                    result[kind] = {
+                        **artifact,
+                        "download_bytes": sample.stat().st_size,
+                        "review": "PROTOTYPE_BYPASS" if review_pass else "PASS",
+                    }
                     login("other-user")
                     assert client.get(f"/artifacts/{artifact_id}/download").status_code == 403
-                    login("demo-reviewer")
+                    login("demo-user" if review_pass else "demo-reviewer")
             login("other-user")
             assert client.get(f"/documents/{uploaded['document_id']}").status_code == 403
             result["idor"] = "PASS"
@@ -115,6 +125,7 @@ def run():
             "formats_passed": len(results),
             "results": results,
             "fixture_policy": "synthetic-only",
+            "review_mode": "prototype-pass" if review_pass else "strict",
         }
         (output_dir / "docker-golden.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
         return result

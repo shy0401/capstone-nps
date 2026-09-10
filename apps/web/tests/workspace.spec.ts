@@ -11,6 +11,8 @@ test('Korean workspace, upload, review gate and valid editable artifact',async({
   await page.getByLabel('계정',{exact:true}).fill('demo-user');
   await page.getByLabel('비밀번호',{exact:true}).fill(password);
   await page.getByRole('button',{name:'로그인 →'}).click();
+  await expect(page.getByLabel('프로젝트 선택')).toBeVisible();
+  test.skip(await page.getByText('프로토타입-검토패스 · 검토자 승인 없이',{exact:false}).isVisible(),'Strict review scenario; run with PROTOTYPE_REVIEW_MODE=strict');
   await page.getByLabel('프로젝트 선택').selectOption({label:'합성 데이터 검증 프로젝트 1'});
   await page.getByLabel('문서 업로드').setInputFiles(path.join(root,'tests/golden/fixtures/synthetic.docx'));
   const document=page.getByRole('button').filter({hasText:'synthetic.docx'}).last();
@@ -28,6 +30,8 @@ test('Korean workspace, upload, review gate and valid editable artifact',async({
   await page.getByLabel('계정',{exact:true}).fill('demo-reviewer');
   await page.getByLabel('비밀번호',{exact:true}).fill(password);
   await page.getByRole('button',{name:'로그인 →'}).click();
+  await expect(page.getByLabel('프로젝트 선택')).toBeVisible();
+  test.skip(await page.getByText('프로토타입-검토패스 · 검토자 승인 없이',{exact:false}).isVisible(),'Strict review scenario; run with PROTOTYPE_REVIEW_MODE=strict');
   await page.getByLabel('프로젝트 선택').selectOption({label:'합성 데이터 검증 프로젝트 1'});
   await page.getByRole('button').filter({hasText:'synthetic.docx'}).last().click();
   await page.getByRole('button',{name:'계획 승인',exact:true}).click();

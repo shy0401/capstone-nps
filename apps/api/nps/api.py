@@ -117,6 +117,7 @@ def me(user: Actor):
         **serialize(user),
         "modes": {"llm": settings().llm_mode, "comfy": settings().comfy_mode, "scan": settings().scan_mode},
         "environment": settings().environment,
+        "review_mode": settings().review_mode,
     }
 
 
@@ -233,10 +234,26 @@ def change_role(user_id: UUID, data: RoleInput, db: DB, user: Actor):
     if user.role != "SystemAdmin" and (data.role == "SystemAdmin" or target.role == "SystemAdmin"):
         raise DomainError("AUTH_FORBIDDEN", 403)
     old = target.role
+    old_active = target.active
     target.role, target.active = data.role, data.active
-    audit(db, user, "USER_ROLE_CHANGE", target.id, detail={"old_role": old, "new_role": data.role})
+    audit(
+        db,
+        user,
+        "USER_ROLE_CHANGE",
+        target.id,
+        detail={"old_role": old, "new_role": data.role, "old_active": old_active, "new_active": data.active},
+    )
     db.commit()
     return serialize(target)
+
+
+@router.get("/admin/users")
+def admin_users(db: DB, user: Actor):
+    require_admin(user)
+    return [
+        serialize(u)
+        for u in db.scalars(select(User).where(User.org_id.in_(org_scope(db, user))).order_by(User.username))
+    ]
 
 
 @router.get("/admin/audit")

@@ -1,10 +1,21 @@
+x-review-pass: &review-pass
+  ENVIRONMENT: dev
+  REVIEW_MODE: ${PROTOTYPE_REVIEW_MODE:-prototype-pass}
 services:
   api:
     environment:
-      ENVIRONMENT: dev
+      <<: *review-pass
       DEV_INSECURE_COOKIE: "true"
       SCAN_MODE: mock
   doc-worker:
     environment:
-      ENVIRONMENT: dev
+      <<: *review-pass
       SCAN_MODE: mock
+  llm-worker:
+    environment: *review-pass
+  ppt-worker:
+    environment: *review-pass
+  image-worker:
+    environment: *review-pass
+  video-worker:
+    environment: *review-pass

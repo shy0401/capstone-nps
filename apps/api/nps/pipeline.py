@@ -2,6 +2,7 @@
 
 from sqlalchemy import func, select
 from nps.auth import audit
+from nps.config import settings
 from nps.chunking import chunk_document
 from nps.contracts import NormalizedDocument, SlidePlanContract
 from nps.errors import DomainError
@@ -220,7 +221,9 @@ def execute_step(db, job_id, handler=None):
         completed = pipeline.index(step_name) + 1
         job.progress = int(completed / len(pipeline) * 100)
         if completed == len(pipeline):
-            needs_review = job.kind in {"analyze", "plan"} or output.get("qa_status") == "FAIL"
+            needs_review = (
+                job.kind in {"analyze", "plan"} and not settings().prototype_review_pass
+            ) or output.get("qa_status") == "FAIL"
             transition(job, "WAITING_REVIEW" if needs_review else "SUCCEEDED")
             job.result = output
         else:

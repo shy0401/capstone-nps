@@ -1,4 +1,4 @@
-# 구현·검증 현황 · v0.1.1
+# 구현·검증 현황 · v0.1.2
 
 원본 SRS/Master/수행계획을 조사하여 모노레포를 구현했다. 원문은 보존했다.
 아래는 Phase별 현재 도달 상태이며, 운영 환경 시험을 포함한 전체 Phase 완료 선언은 아니다.
@@ -14,10 +14,10 @@
 | 6 | editable PPT·QA·version | 기존 Golden PASS; 공식 템플릿/품질 고도화 필요 |
 | 7 | Comfy adapter·image worker | mock/HTTP 계약; 실제 모델/워크플로 실행 필요 |
 | 8 | storyboard·CPU MP4·ffprobe QA | 기존 Golden PASS; 고급 연출/실모델 미완료 |
-| 9 | React workspace/review/admin | 단위 3 PASS, HWP 검토자 브라우저 1 PASS |
-| 10 | 보안·Golden·E2E | 최신 비미디어 85 PASS, 기존 Docker Golden PASS |
+| 9 | React workspace/review/admin | 단위 4 PASS, HWP/검토패스/실제 생성 브라우저 2 PASS |
+| 10 | 보안·Golden·E2E | 최신 비미디어 98 PASS, 기존 Docker Golden PASS |
 | 11 | SBOM/checksum/images/offline/runbook | 격리 컨테이너 PASS; 물리 clean-host/승인 rollback 남음 |
 
-최신 사용자 지시 이후 PPT/영상 생성은 중단하고 코드·보안·검토 흐름·배포 검증만 진행했다.
-현재 MUST 72 PASS / 22 PARTIAL / 1 TBD. 미완료 요구별 사유는 traceability-matrix.md 참조.
+최신 사용자 요청에 따라 실제 프로젝트 경로의 PPTX/MP4 생성·다운로드·재생을 합성 문서로 검증했다. dev는 검토패스, strict 승인 경로는 유지한다.
+현재 MUST 73 PASS / 21 PARTIAL / 1 TBD. 미완료 요구별 사유는 traceability-matrix.md 참조.
 실행 결과와 제약은 FINAL_REPORT.md, 사용 가능한 기능/향후 개발은 FEATURES_ROADMAP.md에 정리했다.

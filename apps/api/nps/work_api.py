@@ -187,7 +187,7 @@ def plan_approve(plan_id: UUID, data: ReviewInput, db: DB, user: Actor):
 def generation(db, user, plan, kind, key):
     require_approved(plan)
     validate_plan(db, plan)
-    if kind == "video":
+    if kind == "video" and not settings().prototype_review_pass:
         candidates = db.scalars(
             select(Artifact).where(Artifact.plan_id == plan.id, Artifact.type == "PPTX")
         ).all()

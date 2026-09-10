@@ -5,6 +5,7 @@ from sqlalchemy import select
 from nps.api import Actor, DB, ReviewInput, serialize
 from nps.auth import audit, authorize_project
 from nps.contracts import Contract
+from nps.config import settings
 from nps.errors import DomainError
 from nps.jobs import create_job, snapshot
 from nps.models import Approval, Artifact, ArtifactVersion, Review, SlidePlan
@@ -22,6 +23,7 @@ def eligible(version):
         and version.provenance.get("official_template", False)
         and not version.provenance.get("mock", True)
         and not version.provenance.get("video_mock", False)
+        and version.provenance.get("review_mode", "strict") != "prototype-pass"
     )
 
 
@@ -159,7 +161,7 @@ def regenerate(
     artifact = scoped(db, user, Artifact, artifact_id)
     plan = db.get(SlidePlan, artifact.plan_id)
     require_approved(plan)
-    if artifact.type == "MP4":
+    if artifact.type == "MP4" and not settings().prototype_review_pass:
         candidates = db.scalars(
             select(Artifact).where(Artifact.plan_id == plan.id, Artifact.type == "PPTX")
         ).all()

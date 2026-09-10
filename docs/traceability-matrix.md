@@ -1,10 +1,8 @@
-# SRS v1.0 요구사항 전수 대조 · v0.1.1
+# SRS 요구사항 대조 · v0.1.2
 
-95개 MUST를 각각 검토했다. PASS는 해당 기본 계약과 시험 범위의 충족이며 전체 문서 충실도·실모델·기관 운영 승인까지 의미하지 않는다.
+MUST: PASS 73 / PARTIAL 21 / FAIL 0 / TBD 1. 기본 구현과 시험 범위이며 전체 운영 승인 판정이 아니다.
 
-MUST 집계: PASS 72, PARTIAL 22, FAIL 0, TBD 1
-
-현재 실행 결과는 `FINAL_REPORT.md`, 원문 수용기준과 기계 판독 결과는 `srs-audit.json`에 있다.
+**검토 요구의 PASS는 strict 모드 기준이다.** 현재 dev는 사용자 요청에 따라 prototype-pass이며 사람의 검토/승인을 생략한다. 이 예외는 prod/offline에서 허용하지 않는다. 승인 기록을 자동 생성하지 않으며 QA·RBAC·원문 근거 검증은 유지한다.
 
 | ID | 우선순위 | 판정 | 구현 | 시험/증거 | 남은 범위 |
 |---|---|---|---|---|---|
@@ -14,8 +12,8 @@ MUST 집계: PASS 72, PARTIAL 22, FAIL 0, TBD 1
 | FR-IAM-004 | MUST | PASS | auth.py / api.py | tests/security/test_authz.py | 프로토타입 기본 계약/회귀 검증 범위. 실모델·기관 승인 완료를 의미하지 않음. |
 | FR-IAM-005 | MUST | PASS | auth.py / api.py | tests/security/test_authz.py | 프로토타입 기본 계약/회귀 검증 범위. 실모델·기관 승인 완료를 의미하지 않음. |
 | FR-IAM-006 | MUST | PASS | auth.py / api.py | tests/security/test_authz.py | 프로토타입 기본 계약/회귀 검증 범위. 실모델·기관 승인 완료를 의미하지 않음. |
-| FR-IAM-007 | SHOULD | PARTIAL | auth.py / api.py | tests/security/test_authz.py | 선택 요구: 기본 경로 구현, 전수 수용 시험 미완료. |
-| FR-PRJ-001 | MUST | PARTIAL | api.py | tests/integration/test_auth_api.py | 생성/조회/수정 API 및 생성 UI 구현. UI의 보안등급·템플릿·프로젝트 수정 설정은 제한적. |
+| FR-IAM-007 | SHOULD | PASS | api.py / auth.py / apps/web/src/settings.tsx | tests/integration/test_auth_api.py | 조직 scope 사용자 목록, 역할/활성 UI, 변경 전후 역할·활성 및 행위자·시간 감사로그. |
+| FR-PRJ-001 | MUST | PASS | api.py / apps/web/src/settings.tsx | tests/integration/test_auth_api.py / prototype-generation.spec.ts | 프로젝트 생성/조회/설정 UI와 소유자 scope. 이름·설명·보안등급·템플릿 수정, 생성자 조직 귀속. |
 | FR-PRJ-002 | MUST | PASS | api.py | tests/integration/test_auth_api.py | 프로토타입 기본 계약/회귀 검증 범위. 실모델·기관 승인 완료를 의미하지 않음. |
 | FR-DOC-001 | MUST | PASS | upload.py / work_api.py | tests/golden/test_golden.py | 프로토타입 기본 계약/회귀 검증 범위. 실모델·기관 승인 완료를 의미하지 않음. |
 | FR-DOC-002 | MUST | PASS | upload.py / work_api.py | tests/golden/test_golden.py | 프로토타입 기본 계약/회귀 검증 범위. 실모델·기관 승인 완료를 의미하지 않음. |
