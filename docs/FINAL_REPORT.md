@@ -10,6 +10,7 @@ SRS MUST 95개: PASS 72 / PARTIAL 22 / FAIL 0 / TBD 1. PASS는 개별 프로토�
 - 프로젝트 소유자가 UI에서 같은 조직의 검토자를 추가할 수 있도록 API·권한 검증 연결.
 - QA 실패 작업을 성공 대신 검토 필요로 표시. 승인 Gate와 원문 근거 유지.
 - 줄이 많은 문서의 다단 배치 및 내용 초과 검출, Git SHA 산출물 provenance 구성.
+- API 재생성 시 edge의 Docker DNS 갱신으로 502 방지. 서로 다른 IP의 합성 backend 교체를 edge 재시작 없이 통과.
 - Windows UTF-8 Docker 출력 처리, missing/unhealthy 서비스와 비-edge publish 실패 판정.
 - Vite/Vitest 보안 업데이트 및 lock 재생성. npm audit 검출 취약점 0.
 - Docker build/source bundle에서 비밀 파일·IDE 설정 제외, 컨테이너 OS SBOM·이미지 포함 개발 bundle 기능.
@@ -33,6 +34,7 @@ docker compose -f compose.yml -f compose.dev.yml up -d --build --wait
 | 검사 | 결과 | 증거/범위 |
 |---|---|---|
 | Docker build/up --wait | PASS | API/edge 0.1.1, dev 11개 서비스 정상 |
+| edge DNS 재연결 | PASS | `test-results/edge-dns-result.json`; 별도 격리 컨테이너, API 주소 교체 |
 | 외부 publish | PASS | edge 127.0.0.1:8080만 공개; DB/Redis published=0 |
 | 최신 Python 비미디어 회귀 | 85 PASS / 0 FAIL / 1 SKIP | `test-results/nonmedia-tests.xml`; 미디어 5건은 이번 실행 제외 |
 | React 단위 검사 | 3 PASS / 0 FAIL | Vitest 4.1.11 |
@@ -60,9 +62,7 @@ PPTX는 편집 가능한 텍스트/표/차트 구조이며, MP4는 ffprobe와 �
 
 개발 snapshot 생성 명령: `python infra/scripts/bundle.py --development`.
 정확한 최신 경로는 `release/latest-bundle.txt`, checksum 검사 결과는 `test-results/bundle-result.json`에 기록한다.
-이번 생성 경로: `release/release-bundle/capstone-0.1.1-20260910T015431Z`.
-무결성 418개 파일 PASS, 전체 약 852 MB. Docker 이미지 5개, SPDX 패키지 747개(OS 576개) 포함.
-이미지/앱 소스 커밋: `c4700677935238343d35491d795eedfd6bf4e843`. 이후 보고서·경로 커밋은 실행 코드 변경이 아니다.
+최종 bundle의 정확한 파일 수·경로·무결성은 `bundle-result.json`, 이미지/앱 소스 커밋은 `release-manifest.yaml`을 기준으로 확인한다.
 구성: source, Docker runtime.tar, image ID/digests, Python/npm/container OS SPDX SBOM, licenses, wheelhouse, frontend,
 model/workflow/prompt version·hash, release-manifest, checksums, 기존 합성 테스트 증거, INSTALL_ROLLBACK.
 `release_ready=false`: 기관 승인된 백신 갱신 정책·물리 오프라인 설치·이전 승인 릴리스 rollback 증거가 남아 있다.

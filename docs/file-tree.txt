@@ -84,6 +84,7 @@ capstone-nps/ (source files; private storage, dependencies and generated evidenc
   infra/scripts/bundle.py
   infra/scripts/clamav_smoke.py
   infra/scripts/document_status.py
+  infra/scripts/edge_dns_smoke.py
   infra/scripts/export_contracts.py
   infra/scripts/generate_fixtures.py
   infra/scripts/http_e2e.py

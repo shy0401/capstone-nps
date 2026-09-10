@@ -16,6 +16,7 @@ storage/
 *.db
 *.db-*
 release/release-bundle/
+release/latest-bundle.txt
 release/wheelhouse/
 test-results/
 !test-results/.gitkeep
