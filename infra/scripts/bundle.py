@@ -121,7 +121,21 @@ def build():
         "Institutional approval of ClamAV signature freshness/update policy",
         "Clean-host no-egress installation and rollback evidence",
     ]
-    packages = os_packages
+    # Runtime imports the bundled source, which may be newer than an editable
+    # distribution left in the developer's venv. Describe the released source.
+    packages = os_packages + [
+        {
+            "SPDXID": "SPDXRef-App",
+            "name": "capstone-nps",
+            "versionInfo": VERSION,
+            "downloadLocation": "NOASSERTION",
+            "filesAnalyzed": False,
+            "licenseConcluded": "NOASSERTION",
+            "licenseDeclared": "NOASSERTION",
+            "copyrightText": "NOASSERTION",
+            "comment": "Bundled application source at git " + git_sha(),
+        }
+    ]
     catalog = json.loads((ROOT / "templates/catalog.json").read_text(encoding="utf-8"))
     shutil.copy2(ROOT / "templates/vendor/reveal/LICENSE", out / "licenses/reveal-theme-MIT.txt")
     for theme in catalog:
@@ -144,6 +158,8 @@ def build():
         sorted(importlib.metadata.distributions(), key=lambda d: d.metadata.get("Name", ""))
     ):
         name = dist.metadata.get("Name", "unknown")
+        if name.lower().replace("_", "-") == "capstone-nps":
+            continue
         spdx_id = "SPDXRef-Python-" + str(index)
         license_value = dist.metadata.get("License-Expression") or "NOASSERTION"
         packages.append(
