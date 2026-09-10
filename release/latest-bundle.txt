@@ -1,1 +1,1 @@
-C:\Users\ggg\Documents\4학년\캡스톤\2차 모임 준비\capstone-nps\release\release-bundle\capstone-0.1.0-20260909T184212Z
+release/release-bundle/capstone-0.1.1-20260910T015431Z

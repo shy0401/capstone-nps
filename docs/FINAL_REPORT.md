@@ -60,6 +60,9 @@ PPTX는 편집 가능한 텍스트/표/차트 구조이며, MP4는 ffprobe와 �
 
 개발 snapshot 생성 명령: `python infra/scripts/bundle.py --development`.
 정확한 최신 경로는 `release/latest-bundle.txt`, checksum 검사 결과는 `test-results/bundle-result.json`에 기록한다.
+이번 생성 경로: `release/release-bundle/capstone-0.1.1-20260910T015431Z`.
+무결성 418개 파일 PASS, 전체 약 852 MB. Docker 이미지 5개, SPDX 패키지 747개(OS 576개) 포함.
+이미지/앱 소스 커밋: `c4700677935238343d35491d795eedfd6bf4e843`. 이후 보고서·경로 커밋은 실행 코드 변경이 아니다.
 구성: source, Docker runtime.tar, image ID/digests, Python/npm/container OS SPDX SBOM, licenses, wheelhouse, frontend,
 model/workflow/prompt version·hash, release-manifest, checksums, 기존 합성 테스트 증거, INSTALL_ROLLBACK.
 `release_ready=false`: 기관 승인된 백신 갱신 정책·물리 오프라인 설치·이전 승인 릴리스 rollback 증거가 남아 있다.
