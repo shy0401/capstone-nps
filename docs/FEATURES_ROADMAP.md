@@ -1,4 +1,4 @@
-# 프로토타입 기능 및 개발 로드맵 · v0.1.2
+# 프로토타입 기능 및 개발 로드맵 · v0.2.0
 
 **현재 위치: Docker에서 사용하는 CPU/mock 프로토타입. 실제 AI 모델과 기관 운영 연결은 다음 단계.**
 
@@ -14,7 +14,8 @@
 | 근거 추적 | 섹션 기반 chunk, document version·source ref 연결 | HWP 쪽 번호·표/이미지 구조 미복원 |
 | 계획 검토 | schema-valid SlidePlan, 자동 표시, 수정·저장 | dev 검토패스 / strict 승인 Gate |
 | 작업 관리 | 분리 Worker, 진행률 REST/WS, 취소·재시도·단계 재개 | 실제 GPU 취소 미검증 |
-| PPT 기능 | 편집 가능한 텍스트/표/차트, 다단 배치, QA·버전·다운로드 | 사용자가 승인 후 요청; 공식 템플릿 미확정 |
+| PPT 기능 | 핵심문장 편집, 어절 줄바꿈, 표지/요점/비교/절차/표/차트/이미지 7배치, 편집 가능한 PPTX | CPU 발췌형; 실제 LLM 요약 연결은 다음 단계 |
+| 디자인 참고실 | 기본 22종 + PPTX 다중 업로드·스타일 특징 저장·조직별 선택/재사용 | 모델 가중치 학습·원본 디자인 완전 복제는 아님 |
 | 영상 기능 | CPU MP4 renderer, scene 근거, ffprobe/QA | 사용자가 검토 후 요청; 고급 연출 제한 |
 | 검토/감사 | 버전별 승인/반려/수정 요청, Artifact 이력, Audit Log | mock/내부 템플릿은 공식 사용 표시 금지 |
 | 배포/보안 | hash lock, SBOM/checksum, Docker image bundle, 설치/롤백 문서 | 기관 운영 Release Gate 미완료 |
@@ -26,7 +27,7 @@
 | P1 | HWP 표·그림·페이지 구조 복원 | 병합 셀/도표/근거 위치 Golden 비교 통과 |
 | P1 | 실제 LLM 연결 | 승인된 로컬 모델로 요약·구성, schema/retry/timeout 통합 통과 |
 | P1 | 실제 ComfyUI 연결 | 검증된 workflow/model/node hash와 ControlNet/IP-Adapter 실행 |
-| P1 | PPT/영상 발표 품질 | 승인된 템플릿·폰트, 실제 렌더 QA, 원문-출력 내용 일치 |
+| P1 | PPT/영상 발표 품질 확장 | 기본 배치·PowerPoint 렌더 검증 구현. 의미 기반 스토리텔링·복잡 표/그림·공식 템플릿 검증 확대 |
 | P1 | 운영 보안 경계 | parser 전용 격리, 백신 signature 갱신·승인, 로그 전수검사 |
 | P2 | 조직/멤버 관리 UI 확장 | 역할·활성/프로젝트 설정은 구현. 조직 트리와 전체 멤버 UI 확장 |
 | P2 | 장애/부하 검증 | 실제 worker kill/복구, 동시 요청, VRAM/큐 공정성·SLA 시험 |

@@ -27,11 +27,13 @@ PIPELINES = {
     "plan": ["LLM_SUMMARY", "LLM_KEY_MESSAGES", "LLM_OUTLINE", "LLM", "LLM_VISUAL", "PLAN_VALIDATE"],
     "ppt": ["IMAGE", "PPT", "PPT_QA"],
     "image": ["IMAGE"],
-    "video": ["VIDEO", "FINAL_QA"],
+    "video": ["IMAGE", "VIDEO", "FINAL_QA"],
     "template": ["SECURITY_SCAN"],
+    "design_reference": ["SECURITY_SCAN", "DESIGN_LEARN"],
 }
 ROUTING = {
     "SECURITY_SCAN": "document",
+    "DESIGN_LEARN": "document",
     "PARSE": "document",
     "CHUNK": "document",
     "LLM_SUMMARY": "llm",

@@ -116,7 +116,11 @@
             "title_content",
             "table",
             "chart",
-            "image"
+            "image",
+            "cover",
+            "key_points",
+            "process",
+            "comparison"
           ],
           "title": "Layout Type",
           "type": "string"

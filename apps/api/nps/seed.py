@@ -9,6 +9,10 @@ from nps.models import OrganizationUnit, Project, ProjectMember, Template, User
 
 
 def seed(db, password):
+    from nps.themes import seed_themes
+
+    seed_themes(db)
+    db.commit()
     if not password:
         return
     if db.scalar(select(User).limit(1)):

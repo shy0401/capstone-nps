@@ -1,6 +1,6 @@
 name: capstone-nps
 x-runtime: &runtime
-  image: capstone-nps-api:0.1.2
+  image: capstone-nps-api:0.2.0
   build:
     context: .
     dockerfile: infra/compose/api.Dockerfile
@@ -26,7 +26,7 @@ x-runtime: &runtime
     redis: {condition: service_healthy}
 services:
   edge:
-    image: capstone-nps-edge:0.1.2
+    image: capstone-nps-edge:0.2.0
     build:
       context: .
       dockerfile: infra/compose/edge.Dockerfile

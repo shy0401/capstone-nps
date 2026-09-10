@@ -121,7 +121,9 @@ class PlannedSlide(Contract):
     slide_id: UUID = Field(default_factory=uuid4)
     version: int = 1
     order: int = Field(ge=1)
-    layout_type: Literal["title_content", "table", "chart", "image"] = "title_content"
+    layout_type: Literal[
+        "title_content", "table", "chart", "image", "cover", "key_points", "process", "comparison"
+    ] = "title_content"
     title: str = Field(min_length=1, max_length=80)
     content_blocks: list[ContentBlock] = Field(min_length=1, max_length=5)
     source_refs: list[Evidence] = Field(min_length=1)

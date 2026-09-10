@@ -193,6 +193,7 @@ class Approval(Record, Base):
 
 class Template(Record, Base):
     __tablename__ = "templates"
+    org_id: Mapped[str | None] = mapped_column(String(36), index=True)
     name: Mapped[str] = mapped_column(String(120))
     version: Mapped[str] = mapped_column(String(30))
     config: Mapped[dict] = mapped_column(JSON)

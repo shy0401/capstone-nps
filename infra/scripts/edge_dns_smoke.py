@@ -46,7 +46,7 @@ def run():
             "api",
             "--entrypoint",
             "python",
-            "capstone-nps-api:0.1.2",
+            "capstone-nps-api:0.2.0",
             "-c",
             server,
         )
@@ -65,7 +65,7 @@ def run():
     try:
         command("network", "create", "--internal", network)
         backend(first, "before")
-        command("run", "-d", "--name", edge, "--network", network, "capstone-nps-edge:0.1.2")
+        command("run", "-d", "--name", edge, "--network", network, "capstone-nps-edge:0.2.0")
         expect("before")
         # Allocate the second backend while the first exists to guarantee a different IP.
         backend(second, "after")

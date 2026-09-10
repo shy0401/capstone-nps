@@ -24,8 +24,8 @@ def test_expired_worker_lease_and_other_queue_survives(db, users):
         assert lost.state == "FAILED" and lost.error_code == "WORKER_LOST"
         retry_job(db, user, lost, "PARSE")
         healthy = create_job(db, user, project.id, "video", {})
-        heartbeat("healthy", "video", "cpu", 0)
-        assert claim(db, "video", "healthy").id == healthy.id
+        heartbeat("healthy", "image", "cpu", 0)
+        assert claim(db, "image", "healthy").id == healthy.id
 
 
 def test_running_cancel_is_observed_between_steps(db, users):

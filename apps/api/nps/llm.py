@@ -9,13 +9,10 @@ from pydantic import ValidationError
 from nps.chunking import validate_evidence
 from nps.config import settings
 from nps.contracts import (
-    ContentBlock,
     Contract,
     Evidence,
-    PlannedSlide,
     SemanticChunk,
     SlidePlanContract,
-    VisualPlan,
 )
 from nps.errors import DomainError
 
@@ -72,59 +69,21 @@ class MockLLMAdapter:
                 mode="json"
             )
         pack, digest = prompt_pack()
-        nodes = {n["node_id"]: n for s in payload["normalized"]["sections"] for n in s["nodes"]}
-        slides = []
-        for chunk in chunks:
-            ref = evidence(chunk)
-            blocks = []
-            if chunk.table_refs:
-                node = nodes[str(chunk.table_refs[0])]
-                cells = node["cells"]
-                # Preserve every cell. Oversized tables are paginated, never silently truncated.
-                if any(len(r) > 8 for r in cells) or any(len(c) > 120 for r in cells for c in r):
-                    raise DomainError("PLAN_TABLE_REVIEW_REQUIRED", 422)
-                for offset in range(1, len(cells), 7):
-                    blocks.append(
-                        ContentBlock(
-                            type="table", cells=[cells[0]] + cells[offset : offset + 7], source_refs=[ref]
-                        )
-                    )
-                if len(cells) == 1:
-                    blocks.append(ContentBlock(type="table", cells=cells, source_refs=[ref]))
-            elif chunk.image_refs:
-                blocks = [ContentBlock(type="image", text="원문 이미지", source_refs=[ref])]
-            else:
-                blocks = [
-                    ContentBlock(text=chunk.text[i : i + 400], source_refs=[ref])
-                    for i in range(0, len(chunk.text), 400)
-                ]
-            for block in blocks:
-                slides.append(
-                    PlannedSlide(
-                        order=len(slides) + 1,
-                        title=f"문서 검토 · {chunk.section_id}",
-                        layout_type=block.type if block.type in {"table", "image"} else "title_content",
-                        content_blocks=[block],
-                        source_refs=[ref],
-                        visual_plan=VisualPlan(
-                            mode="preserve" if block.type in {"table", "image"} else "none"
-                        ),
-                    )
-                )
+        from nps.editorial import draft
+
         model_hash = hashlib.sha256(Path("services/llm-adapter/model-manifest.json").read_bytes()).hexdigest()
-        return SlidePlanContract(
-            document_versions=list({c.version_id for c in chunks}),
-            title="문서 검토 계획",
-            slides=slides,
-            mock=True,
-            provenance={
+        return draft(
+            payload,
+            chunks,
+            evidence,
+            {
                 "prompt_pack_version": pack["version"],
                 "prompt_hash": digest,
-                "model_manifest_id": "mock-extractive-1.0",
+                "model_manifest_id": "cpu-editorial-2.0",
                 "model_hash": model_hash,
                 "schema_version": "1.0",
             },
-        ).model_dump(mode="json")
+        )
 
 
 class LocalLLMAdapter:

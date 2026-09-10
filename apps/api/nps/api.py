@@ -19,7 +19,7 @@ from nps.config import settings
 from nps.contracts import Contract, Role
 from nps.db import get_db
 from nps.errors import DomainError
-from nps.models import AuditEvent, OrganizationUnit, Project, ProjectMember, Template, User
+from nps.models import AuditEvent, OrganizationUnit, Project, ProjectMember, User
 
 router = APIRouter(prefix="/api/v1")
 DB = Annotated[Session, Depends(get_db)]
@@ -142,8 +142,10 @@ def projects(db: DB, user: Actor):
 
 @router.post("/projects", status_code=201)
 def create_project(data: ProjectInput, db: DB, user: Actor):
-    if data.template_id and not db.get(Template, str(data.template_id)):
-        raise DomainError("TEMPLATE_NOT_FOUND", 404)
+    if data.template_id:
+        from nps.themes import scoped_template
+
+        scoped_template(db, data.template_id, user.org_id)
     project = Project(**data.model_dump(mode="json"), org_id=user.org_id, owner_id=user.id)
     db.add(project)
     db.flush()
@@ -161,8 +163,10 @@ def project_detail(project_id: UUID, db: DB, user: Actor):
 @router.patch("/projects/{project_id}")
 def update_project(project_id: UUID, data: ProjectInput, db: DB, user: Actor):
     project = authorize_project(db, user, str(project_id), owner=True)
-    if data.template_id and not db.get(Template, str(data.template_id)):
-        raise DomainError("TEMPLATE_NOT_FOUND", 404)
+    if data.template_id:
+        from nps.themes import scoped_template
+
+        scoped_template(db, data.template_id, user.org_id)
     for key, value in data.model_dump(mode="json").items():
         setattr(project, key, value)
     audit(db, user, "PROJECT_UPDATE", project.id, project.id)
@@ -270,4 +274,6 @@ def audit_events(db: DB, user: Actor):
 
 @router.get("/templates")
 def templates(db: DB, user: Actor):
-    return [serialize(t) for t in db.scalars(select(Template))]
+    from nps.themes import visible_templates
+
+    return [serialize(t) for t in visible_templates(db, user.org_id)]

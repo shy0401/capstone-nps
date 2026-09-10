@@ -1,0 +1,330 @@
+[
+  {
+    "slug": "editorial-navy",
+    "name": "Editorial Navy",
+    "background": "F8FAFC",
+    "foreground": "142D43",
+    "accent": "257C88",
+    "tags": [
+      "보고",
+      "사업",
+      "계획"
+    ],
+    "license": "Project-authored design"
+  },
+  {
+    "slug": "warm-paper",
+    "name": "Warm Paper",
+    "background": "FAF6ED",
+    "foreground": "36372E",
+    "accent": "C57539",
+    "tags": [
+      "문화",
+      "교육",
+      "지역"
+    ],
+    "license": "Project-authored design"
+  },
+  {
+    "slug": "forest",
+    "name": "Forest",
+    "background": "F4F7F0",
+    "foreground": "253E32",
+    "accent": "6C8758",
+    "tags": [
+      "환경",
+      "복지",
+      "지원"
+    ],
+    "license": "Project-authored design"
+  },
+  {
+    "slug": "midnight",
+    "name": "Midnight",
+    "background": "142D43",
+    "foreground": "F4F7FA",
+    "accent": "69D2C5",
+    "tags": [
+      "기술",
+      "데이터",
+      "시스템"
+    ],
+    "license": "Project-authored design"
+  },
+  {
+    "slug": "cobalt",
+    "name": "Cobalt",
+    "background": "FFFFFF",
+    "foreground": "172B54",
+    "accent": "3562CC",
+    "tags": [
+      "분석",
+      "통계",
+      "연구"
+    ],
+    "license": "Project-authored design"
+  },
+  {
+    "slug": "plum",
+    "name": "Plum",
+    "background": "FAF7FA",
+    "foreground": "3F254C",
+    "accent": "985588",
+    "tags": [
+      "디자인",
+      "서비스",
+      "개선"
+    ],
+    "license": "Project-authored design"
+  },
+  {
+    "slug": "brick",
+    "name": "Brick",
+    "background": "FCF8F5",
+    "foreground": "412D29",
+    "accent": "AC533D",
+    "tags": [
+      "현황",
+      "과제",
+      "정책"
+    ],
+    "license": "Project-authored design"
+  },
+  {
+    "slug": "graphite",
+    "name": "Graphite",
+    "background": "F6F6F4",
+    "foreground": "292D31",
+    "accent": "63788B",
+    "tags": [
+      "비교",
+      "성과",
+      "평가"
+    ],
+    "license": "Project-authored design"
+  },
+  {
+    "slug": "reveal-beige",
+    "name": "Reveal Beige",
+    "background": "F7F3DE",
+    "foreground": "333333",
+    "accent": "8B743D",
+    "tags": [
+      "beige"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/beige.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "b46a29fb18d3e0451c2545d728db60911c2e85ee67740757aabb582832e3a780",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-black-contrast",
+    "name": "Reveal Black-Contrast",
+    "background": "000000",
+    "foreground": "FFFFFF",
+    "accent": "42AFFA",
+    "tags": [
+      "black-contrast"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/black-contrast.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "d44a241835fe768dcb487059ebc3216d4adeef423c62192c7484bec50bf6d36b",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-black",
+    "name": "Reveal Black",
+    "background": "191919",
+    "foreground": "FFFFFF",
+    "accent": "42AFFA",
+    "tags": [
+      "black"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/black.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "c29c9689e8f3b277aa66edc01ed2ef97981a6768b05ad750582eac068d9705c3",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-blood",
+    "name": "Reveal Blood",
+    "background": "222222",
+    "foreground": "EEEEEE",
+    "accent": "AA2233",
+    "tags": [
+      "blood"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/blood.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "157eace8f16356383b8b31a1e1ff5c507071c0f990ecafc85841e584a38cafab",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-dracula",
+    "name": "Reveal Dracula",
+    "background": "191919",
+    "foreground": "F8F8F2",
+    "accent": "FF79C6",
+    "tags": [
+      "dracula"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/dracula.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "47bf8605c95d61ad25c23d2e16b7de9aca79c1c5b5f1af33558f87f1faef26d0",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-league",
+    "name": "Reveal League",
+    "background": "1C1E20",
+    "foreground": "EEEEEE",
+    "accent": "13DAEC",
+    "tags": [
+      "league"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/league.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "2303d0b38b4d739908112894f93ddca2e4a30ad058bb8a184c85b0a9ddc00a07",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-moon",
+    "name": "Reveal Moon",
+    "background": "002B36",
+    "foreground": "93A1A1",
+    "accent": "268BD2",
+    "tags": [
+      "moon"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/moon.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "e5adaff1083f18014b09452aaec51fa539feabfb5542ffcae15e893e83e166ca",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-night",
+    "name": "Reveal Night",
+    "background": "111111",
+    "foreground": "FFFFFF",
+    "accent": "E7AD52",
+    "tags": [
+      "night"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/night.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "8f58176d72dba32ad6ecdd2d0035d9355762683b7bf718ddb9a431cbd4d58348",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-serif",
+    "name": "Reveal Serif",
+    "background": "F0F1EB",
+    "foreground": "000000",
+    "accent": "51483D",
+    "tags": [
+      "serif"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/serif.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "9bc18b2e020715b740df656fd28c86230ea4eada95c819901c7bd64b2d187789",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-simple",
+    "name": "Reveal Simple",
+    "background": "FFFFFF",
+    "foreground": "000000",
+    "accent": "00008B",
+    "tags": [
+      "simple"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/simple.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "b6c8df9a191c2f25acebf0075d748134773f916385a359303a509a52851551c2",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-sky",
+    "name": "Reveal Sky",
+    "background": "F7FBFC",
+    "foreground": "333333",
+    "accent": "2A76DD",
+    "tags": [
+      "sky"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/sky.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "3435a76a0d394c93864b90633b5be590ee5dc0f643255a8c8fee0214f799bff3",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-solarized",
+    "name": "Reveal Solarized",
+    "background": "FDF6E3",
+    "foreground": "657B83",
+    "accent": "268BD2",
+    "tags": [
+      "solarized"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/solarized.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "91300a3ac059fe020db391084d1fc7d0fd59f9488e43461ef01b3da6ebcce21c",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-white-contrast",
+    "name": "Reveal White-Contrast",
+    "background": "FFFFFF",
+    "foreground": "000000",
+    "accent": "2A76DD",
+    "tags": [
+      "white-contrast"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/white-contrast.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "ced195643e5700ccbb79203389b6ab8074349a920b566cda08b47228b4e0a505",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  },
+  {
+    "slug": "reveal-white",
+    "name": "Reveal White",
+    "background": "FFFFFF",
+    "foreground": "222222",
+    "accent": "2A76DD",
+    "tags": [
+      "white"
+    ],
+    "license": "MIT",
+    "license_path": "templates/vendor/reveal/LICENSE",
+    "source_url": "https://github.com/hakimel/reveal.js/blob/807b43097da554de4dba6d020b07f3f110fb766d/dist/theme/white.css",
+    "source_commit": "807b43097da554de4dba6d020b07f3f110fb766d",
+    "source_sha256": "41e9507d97eb13ce6804645a9ce9f16220ddc3bfd6e7888aa3a0b5f61777d8f3",
+    "adaptation": "Palette adapted for native PPTX. Original CSS and remote fonts are never executed."
+  }
+]

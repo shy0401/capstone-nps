@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: 연금술사 Prototype API
-  version: 0.1.2
+  version: 0.2.0
 paths:
   /api/v1/auth/login:
     post:
@@ -1275,6 +1275,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/design-library:
+    get:
+      summary: Library
+      operationId: library_api_v1_design_library_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/projects/{project_id}/design-references:
+    post:
+      summary: Reference Upload
+      operationId: reference_upload_api_v1_projects__project_id__design_references_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_reference_upload_api_v1_projects__project_id__design_references_post'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/health/live:
     get:
       summary: Live
@@ -1297,6 +1341,16 @@ paths:
               schema: {}
 components:
   schemas:
+    Body_reference_upload_api_v1_projects__project_id__design_references_post:
+      properties:
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+          title: File
+      type: object
+      required:
+      - file
+      title: Body_reference_upload_api_v1_projects__project_id__design_references_post
     Body_template_upload_api_v1_admin_templates_post:
       properties:
         file:
@@ -1455,6 +1509,10 @@ components:
           - table
           - chart
           - image
+          - cover
+          - key_points
+          - process
+          - comparison
           title: Layout Type
           default: title_content
         title:

@@ -38,6 +38,7 @@ def llm_payload(db, job):
         raise DomainError("PARSE_REQUIRED", 409)
     return {
         "normalized": parse.data,
+        "document_title": db.get(Document, job.payload["document_id"]).title,
         "chunks": [c.data for c in db.scalars(select(Chunk).where(Chunk.version_id == version_id))],
     }
 
@@ -46,6 +47,8 @@ def do_step(db, job, step, cancelled):
     user = db.get(User, job.requested_by)
     if step == "SECURITY_SCAN":
         result = security_scan(job.payload)
+        if job.kind == "design_reference":
+            return result
         if job.kind == "template":
             from pptx import Presentation
 
@@ -159,8 +162,41 @@ def do_step(db, job, step, cancelled):
 
             output = StageOutput.model_validate(output).model_dump(mode="json")
         return {"data": output}
+    if step == "DESIGN_LEARN":
+        from nps.theme_extract import safe_extract
+
+        scan = result_for(db, job, "SECURITY_SCAN")
+        existing = next(
+            (
+                t
+                for t in db.scalars(select(Template).where(Template.org_id == user.org_id))
+                if t.config.get("reference_sha256") == scan["sha256"]
+            ),
+            None,
+        )
+        if existing:
+            return {"template_id": existing.id, "reused": True, "learning": "style-memory"}
+        policy = safe_extract(storage.path(scan["storage_key"]))
+        policy.update(reference_sha256=scan["sha256"], scan_mode=scan["scan_mode"], tags=[])
+        template = Template(
+            name=job.payload["name"],
+            version="2.0",
+            org_id=user.org_id,
+            config=policy,
+            storage_key=scan["storage_key"],
+            official_flag=False,
+        )
+        db.add(template)
+        db.flush()
+        audit(
+            db, user, "DESIGN_REFERENCE_LEARNED", template.id, job.project_id, detail={"mode": "style-memory"}
+        )
+        return {"template_id": template.id, "learning": "style-memory", "slides": policy["reference_slides"]}
     if step == "PLAN_VALIDATE":
         data = result_for(db, job, "LLM")["data"]
+        from nps.themes import attach_theme
+
+        attach_theme(db, db.get(Project, job.project_id), data)
         plan = SlidePlan(
             id=data["plan_id"], project_id=job.project_id, document_id=job.payload["document_id"], data=data
         )

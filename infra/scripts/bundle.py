@@ -122,6 +122,24 @@ def build():
         "Clean-host no-egress installation and rollback evidence",
     ]
     packages = os_packages
+    catalog = json.loads((ROOT / "templates/catalog.json").read_text(encoding="utf-8"))
+    shutil.copy2(ROOT / "templates/vendor/reveal/LICENSE", out / "licenses/reveal-theme-MIT.txt")
+    for theme in catalog:
+        if theme.get("source_sha256"):
+            packages.append(
+                {
+                    "SPDXID": "SPDXRef-Theme-" + theme["slug"],
+                    "name": theme["name"],
+                    "versionInfo": theme["source_commit"],
+                    "downloadLocation": theme["source_url"],
+                    "filesAnalyzed": False,
+                    "licenseConcluded": "MIT",
+                    "licenseDeclared": "MIT",
+                    "copyrightText": "See licenses/reveal-theme-MIT.txt",
+                    "checksums": [{"algorithm": "SHA256", "checksumValue": theme["source_sha256"]}],
+                    "comment": theme["adaptation"],
+                }
+            )
     for index, dist in enumerate(
         sorted(importlib.metadata.distributions(), key=lambda d: d.metadata.get("Name", ""))
     ):
@@ -206,10 +224,15 @@ def build():
             "sha256": digest(out / "models/llm-manifest.json"),
         },
         "workflow": {"version": "wf-image-1.0", "sha256": digest(ROOT / "workflows/comfy/wf-image-v1.json")},
-        "prompt_pack": {"version": "prompt-slide-1.0", "sha256": digest(ROOT / "prompts/slide-v1.json")},
+        "prompt_pack": {"version": "prompt-slide-2.0", "sha256": digest(ROOT / "prompts/slide-v1.json")},
         "schema_version": "1.0",
-        "template_version": "1.0",
-        "db_revision": "39b4465bf603",
+        "template_version": "2.0",
+        "design_library": {
+            "bundled_themes": len(catalog),
+            "catalog_sha256": digest(ROOT / "templates/catalog.json"),
+            "learning": "style-features-2.0; no weight training",
+        },
+        "db_revision": "a21_theme_scope",
         "sbom": "SBOM.spdx.json",
         "offline_golden_test": read_status("offline-container-result.json", "status"),
         "host_golden_test": read_status("golden-result.json", "status"),

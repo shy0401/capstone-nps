@@ -13,16 +13,39 @@ from pptx.util import Inches, Pt
 from sqlalchemy import func, select
 from nps.auth import audit
 from nps.errors import DomainError
-from nps.models import Artifact, ArtifactVersion, Project, Template, User, VisualAsset
+from nps.models import Artifact, ArtifactVersion, Project, User, VisualAsset
 from nps.rendering import text_fits, text_layout
 from nps.storage import sha256_file, storage
 
 
 def template_for(db, plan):
+    from nps.themes import plan_theme
+
+    selected = plan_theme(db, plan)
+    if selected:
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            id=selected.id,
+            version=selected.version,
+            official_flag=False,
+            storage_key=None,
+            config=plan.data["provenance"]["theme_policy"],
+        )
     project = db.get(Project, plan.project_id)
-    template = (
-        db.get(Template, project.template_id) if project.template_id else db.scalar(select(Template).limit(1))
-    )
+    from nps.themes import scoped_template, visible_templates
+
+    template = scoped_template(db, project.template_id, project.org_id) if project.template_id else None
+    # Pre-v2 plans have no frozen style: keep their legacy renderer/policy pair.
+    if not template or template.config.get("design_engine") == "editorial-2":
+        template = next(
+            (
+                t
+                for t in visible_templates(db, project.org_id)
+                if t.config.get("design_engine") != "editorial-2"
+            ),
+            None,
+        )
     if not template:
         raise DomainError("TEMPLATE_NOT_FOUND", 404)
     return template
@@ -44,6 +67,10 @@ def add_text(slide, text, x, y, width, height, size, policy):
 
 
 def render_ppt(plan, output, policy, template_path=None, images=None):
+    if plan.get("provenance", {}).get("design_engine") == "editorial-2":
+        from nps.presentation_design import render
+
+        return render(plan, output, policy, images)
     deck = Presentation(template_path) if template_path else Presentation()
     # External template masters/layouts are preserved, example slides are removed.
     for slide_id in list(deck.slides._sldIdLst):
@@ -189,11 +216,11 @@ def qa_ppt(path, plan, policy):
                 or shape.top + shape.height > deck.slide_height - margin
             ):
                 issues.append(f"PPT-BOUND:{index + 1}")
-            if shape.has_text_frame:
+            if shape.has_text_frame and not shape.name.startswith("decor:"):
                 editable_text += 1
                 for paragraph in shape.text_frame.paragraphs:
                     size = paragraph.font.size.pt if paragraph.font.size else policy["body_pt"]
-                    if size < policy["min_font_pt"]:
+                    if size < (11 if shape.name.startswith("meta:") else policy["min_font_pt"]):
                         issues.append(f"PPT-FONT:{index + 1}")
                 size = max(
                     (
@@ -273,7 +300,7 @@ def persist_artifact(db, job, plan, kind, key, qa, extra):
     qa_key = storage.write_json("qa", qa)
     provenance = {
         **plan.data["provenance"],
-        "app_version": "0.1.2",
+        "app_version": "0.2.0",
         "plan_id": plan.id,
         "plan_version": plan.version,
         "review_mode": job.payload.get("review_mode", "strict"),

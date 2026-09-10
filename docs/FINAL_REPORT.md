@@ -1,53 +1,57 @@
-# v0.1.2 실행 결과 · 검토패스와 실제 생성
+# v0.2.0 · 발표용 디자인과 참고 PPT 라이브러리
 
-**현재 dev에서는 일반 사용자로 검토자 없이 분석·PPTX·MP4 생성/다운로드가 가능하다.**
-최신 사용자 요청에 따라 합성 자료로 실제 미디어 생성 검증을 다시 수행했다. 사용자 업로드 파일은 테스트나 Git에 포함하지 않았다.
-전체 SRS/기관 운영 Release는 미완료다. strict 구현 기준 MUST 73 PASS / 21 PARTIAL / 1 TBD.
+현재 Docker 웹 서비스에서 문서 업로드→핵심문장 중심 계획→테마 적용 PPTX·MP4 생성까지 사용할 수 있다. dev 검토패스는 유지한다.
+이번 변경은 PPT 품질과 참고자료 재사용 기능이며, 전체 SRS/기관 운영 Release 완료 선언은 아니다. 기존 strict 요구사항 전수 분류는 별도 traceability matrix를 따른다.
 
-## 이번 수정
+## 구현
 
-- dev 전용 `prototype-pass`: 계획/PPT 사람의 검토 생략, 자동 승인 기록 없음. API·Worker 모두 적용.
-- 생성 요청 감사로그 `PROTOTYPE_REVIEW_BYPASS`와 artifact provenance에 모드 기록. 공식 사용 자격 없음.
-- 분석 결과 자동 표시, 직접/동시 PPTX·MP4 생성 버튼, 진행·다운로드 안내, 배포용 HWP 오류 안내.
-- FR-PRJ-001: 프로젝트 설정 UI(이름·설명·보안등급·기본 템플릿).
-- FR-IAM-007: 조직 scope 사용자 관리 UI/API, 역할/활성 변경 전후 감사 기록.
-- strict 승인 Gate·버전/근거·QA·IDOR·업로드 보안은 유지. 검토패스는 prod/offline에서 설정 오류로 차단.
-
-## 실제 검증
-
-| 항목 | 결과 |
+| 영역 | 현재 기능 |
 |---|---|
-| Python 전체(실제 PPT/영상 검사 포함) | 98 PASS / 0 FAIL / 1 SKIP · v0.1.2-tests.xml |
+| 내용 편집 | 중요 문장 선별·중복 제거, 원문 제목 후보 사용, 핵심 3문장 이내, 최대 10개 내용 슬라이드와 표지, 생략/근거 추적 |
+| PPT 디자인 | 표지/요점/비교/절차/표/차트/이미지, 한글 어절 줄바꿈, 제목·본문 크기/행간/자간·여백 지정, native 편집 가능 |
+| 디자인 참고실 | PPTX 다중 업로드, 스캔 후 색상·폰트·배치 특징 추출, 조직별 저장/선택, 같은 파일 중복 재사용, 감사로그 |
+| 기본 무료 디자인 | 자체 8종 + reveal.js MIT 14종 = 22종. 출처/고정 커밋/SHA256/라이선스 보관 |
+| 영상 | 같은 배치와 근거·원문 이미지, 실제 CPU MP4 인코딩/ffprobe/전체 프레임 decode |
+| 보안 | 기존 RBAC/IDOR/검토 Gate 유지, 타 조직 디자인 선택 차단, 실패한 업로드는 학습 성공 처리하지 않음 |
+
+## 검증 결과
+
+| 검사 | 결과 / 근거 |
+|---|---|
+| Python 전체 | 127 PASS / 0 FAIL / 1 SKIP · test-results/design-pytest.xml |
+| 신규 디자인 검사 | 기본 22테마, 편집성/overflow, 참고 업로드/조직 scope/중복, 원본 이미지, 핵심문장/evidence, source checksum 포함 |
 | React 단위 | 4 PASS |
-| 브라우저 | 2 PASS: HWP 분석/설정/검토패스, 동시 생성/다운로드/MP4 재생 |
-| Docker Golden | PDF/DOCX/XLSX/HWPX/HWP 5종 PASS, DOCX/HWP PPTX·MP4 QA·다운로드·IDOR PASS |
-| 브라우저 실파일 | PPTX 33,738 bytes / MP4 810,170 bytes; synthetic HWP 입력 |
-| Docker | 11개 dev 서비스, edge 127.0.0.1:8080만 publish |
-| 정적 보안/Ruff/TypeScript/build | PASS |
-| ClamAV | 기존 실제 clean/EICAR/unavailable PASS. 호스트 연결 pytest 1건 SKIP |
-| Offline | 기존 격리 컨테이너 Golden PASS. 현재 커밋 물리 clean-host/rollback 미검증 |
+| Browser | 3 PASS · 디자인 업로드/선택, HWP 검토패스 PPTX·MP4 생성/다운로드/재생, 기존 문서 작업 흐름 |
+| Docker Golden | PDF/DOCX/XLSX/HWPX/HWP 5종 분석 PASS. DOCX/HWP PPTX·MP4 QA/다운로드 PASS |
+| 디자인 HTTP Golden | 참고 PPT→저장→HWP→선택 테마 PPTX PASS. 참고 본문이 새 PPT에 복제되지 않음 |
+| PowerPoint | 합성 6배치 및 HTTP로 생성된 참고 테마 PPTX를 실제 PowerPoint에서 열고 PNG export PASS; 어절 끊김 수정 후 재검수 |
+| Compose | 11개 서비스 정상. 실제 publish는 edge 127.0.0.1:8080 한 곳 |
+| Security Gate | 정적 policy/Ruff PASS, pytest의 RBAC/IDOR/업로드/근거 방어 PASS. 실 ClamAV 연결 pytest 1건 SKIP; dev scan은 mock |
+| Offline Gate | 호스트 no-index/socket-denied PPTX·MP4 subgate PASS. v0.2.0 물리 clean-host/airgap/rollback 미검증 |
 
-브라우저 증거: `test-results/prototype-generation.json`, `test-results/browser.xml`.
-프로젝트 경로로 생성·다운로드한 합성 샘플: `test-results/samples/prototype-browser.pptx`, `prototype-browser.mp4`.
-추가 Golden 자료는 `test-results/docker-golden.json`과 samples/docker-*.
-LLM/이미지는 mock이며 MP4는 실제 CPU 인코딩 파일이다. 실제 AI 요약·생성형 영상으로 주장하지 않는다.
+테스트 자료는 전부 합성 자료이다. 사용자 문서나 개인정보를 Git/test fixture/bundle에 넣지 않았다.
+합성 샘플: test-results/design/synthetic-design.pptx, docker-learned-theme.pptx, test-results/samples/prototype-browser.pptx 및 .mp4.
 
-## 실행 / 사용
+## 실행
 
 ```powershell
 .\.venv\Scripts\python.exe infra/scripts/manage.py up
 ```
 
-저장소 루트에서 실행하고 http://127.0.0.1:8080 접속. 기존 브라우저는 새로고침 후 로그인한다.
-화면의 프로토타입-검토패스 확인→문서 선택→분석→PPTX + MP4 함께 생성→아래 산출물 다운로드.
-기관 승인 모드 복원: `.env`에 `PROTOTYPE_REVIEW_MODE=strict` 후 같은 명령.
+http://127.0.0.1:8080 접속 후 새로고침/로그인 → 프로젝트 선택 → 디자인 참고실 → 테마 선택 또는 PPTX 업로드 → 작업실 → 문서 선택 → **분석 시작** → PPTX 생성.
+기존 계획/산출물은 이전 디자인을 보존한다. 새 테마는 다시 분석한 계획부터 적용된다.
 
-## 배포 / 전체 파일 / 한계
+## 파일 및 배포
 
-최신 개발 bundle 경로: `release/latest-bundle.txt`. 무결성: `test-results/bundle-result.json`.
-source, 5종 runtime images, SBOM, checksums, model/workflow/prompt manifest, 설치·롤백 문서 및 합성 증거를 포함한다.
-`release_ready=false`: 기관 백신 갱신 승인·물리 clean-host 및 이전 승인 릴리스 rollback 미완료.
-전체 소스 트리 `docs/file-tree.txt`, 요구별 현황 `docs/traceability-matrix.md`, 기능/계획 `docs/FEATURES_ROADMAP.md`.
-남은 항목: 배포용/암호 HWP, 복잡 표·그림·쪽 구조, OCR, 실제 LLM/Comfy/GPU, 공식 템플릿 품질, 조직 트리 UI, 대규모 장애/부하·rollback.
-기관 망/SSO/GPU/저장·보존/보안/출력/성능/반입 값은 기존 8개 SRS TBD ID를 유지한다.
-WSLg GUI 비활성화 우회와 edge 동적 DNS 수정은 유지한다.
+전체 소스 트리: docs/file-tree.txt. 상세 기능: docs/DESIGN_LIBRARY.md. 현재 기능과 후속 개발: docs/FEATURES_ROADMAP.md.
+개발 Release Bundle 경로: release/latest-bundle.txt. 무결성 보고서: test-results/bundle-result.json.
+Bundle에는 runtime images, 소스, SBOM, checksums, release manifest, 테마 출처/라이선스, 설치·rollback 문서와 합성 검증 결과가 포함된다.
+release_ready=false. 운영 반입 승인본과 구분한다.
+
+## 남은 개발/TBD
+
+- 실제 LLM/VLM·ComfyUI 연결 후 의미 재작성/그림 판단 품질 검증. 현재 CPU는 발췌형 편집이며 모델 가중치 학습을 수행하지 않는다.
+- HWP의 표 병합/그림/페이지 복원과 OCR. 암호/DRM/배포용 HWP 제한 유지.
+- 복잡한 자료별 이야기 구성, 더 많은 배치, 참고 디자인 시각 유사도 검색/관리·삭제 UI, 공식 PPT 품질 기준.
+- parser 추가 격리, 기관 백신 갱신 승인, clean-host 설치·실제 승인 릴리스 rollback, 부하/SLA 검증.
+- 기관 IP/VLAN·SSO·보존기간·스토리지·A40×4 배치·공식 PPT·폰트·로고·반입 정책은 기존 8개 TBD/config를 유지한다.

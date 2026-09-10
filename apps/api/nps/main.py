@@ -12,9 +12,10 @@ from nps.errors import DomainError
 from nps.api import router
 from nps.work_api import router as work_router, ws_router
 from nps.artifacts import router as artifact_router
+from nps.design_api import router as design_router
 from nps.auth import audit_correlation
 
-app = FastAPI(title="연금술사 Prototype API", version="0.1.2", openapi_version="3.1.0")
+app = FastAPI(title="연금술사 Prototype API", version="0.2.0", openapi_version="3.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings().allowed_origins.split(","),
@@ -26,6 +27,7 @@ app.include_router(router)
 app.include_router(work_router)
 app.include_router(ws_router)
 app.include_router(artifact_router)
+app.include_router(design_router)
 
 
 @app.middleware("http")
@@ -79,7 +81,7 @@ async def validation_error(request, exc):
 
 @app.get("/api/v1/health/live")
 def live():
-    return {"status": "alive", "version": "0.1.2"}
+    return {"status": "alive", "version": "0.2.0"}
 
 
 @app.get("/api/v1/health/ready")

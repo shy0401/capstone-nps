@@ -6,3 +6,5 @@
 *.pptx binary
 *.mp4 binary
 *.png binary
+templates/vendor/reveal/*.css -text
+templates/vendor/reveal/LICENSE -text

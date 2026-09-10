@@ -67,6 +67,10 @@ def text_layout(text, width, height, preferred, minimum):
 
 def preview_slide(slide, path, policy, image_path=None):
     """CPU storyboard preview of actual slide text/table, visibly marked mock."""
+    if policy.get("design_engine") == "editorial-2":
+        from nps.presentation_design import preview
+
+        return preview(slide, path, policy, image_path)
     image = Image.new("RGB", (1920, 1080), "#" + policy["background"])
     draw = ImageDraw.Draw(image)
     title_font = ImageFont.truetype(font_file(), 58)

@@ -4,18 +4,22 @@ import subprocess
 from pathlib import Path
 from nps.config import settings
 from nps.errors import DomainError
-from nps.models import Artifact, ArtifactVersion
+from sqlalchemy import select
+from nps.models import Artifact, ArtifactVersion, VisualAsset
 from nps.ppt import persist_artifact, template_for
 from nps.rendering import preview_slide, run_process
 from nps.storage import storage
 
 
-def render_video(plan, output, policy, cancelled=lambda: None, previous_scenes=None, selected=None):
+def render_video(
+    plan, output, policy, cancelled=lambda: None, previous_scenes=None, selected=None, images=None
+):
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise DomainError("FFMPEG_UNAVAILABLE", 503)
     profile = json.loads(Path("templates/video-profile.json").read_text(encoding="utf-8"))
     fps, seconds = settings().video_fps, settings().video_scene_seconds
+    policy = {**policy, "slide_count": len(plan["slides"])}
     scenes = []
     previous = {s["source_slide_id"]: s for s in (previous_scenes or [])}
     for slide in plan["slides"]:
@@ -30,7 +34,7 @@ def render_video(plan, output, policy, cancelled=lambda: None, previous_scenes=N
             scenes.append(old)
             continue
         image_key, image_path = storage.allocate("visuals", ".png")
-        preview_slide(slide, image_path, policy)
+        preview_slide(slide, image_path, policy, (images or {}).get(slide["slide_id"]))
         clip_key, clip = storage.allocate("visuals", ".mp4")
         frames = max(1, round(seconds * fps))
         vf = f"zoompan=z='min(zoom+0.0003,1.05)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s={profile['width']}x{profile['height']}:fps={fps},format=yuv420p"
@@ -180,7 +184,16 @@ def render_step(db, job, plan, cancelled):
         )
     key, path = storage.allocate("artifacts", ".mp4")
     storyboard = render_video(
-        plan.data, path, template_for(db, plan).config, cancelled, previous, job.payload.get("slide_id")
+        plan.data,
+        path,
+        template_for(db, plan).config,
+        cancelled,
+        previous,
+        job.payload.get("slide_id"),
+        {
+            a.slide_id: storage.path(a.storage_key)
+            for a in db.scalars(select(VisualAsset).where(VisualAsset.plan_id == plan.id))
+        },
     )
     return {"storage_key": key, "storyboard": storyboard}
 
